@@ -1,0 +1,21 @@
+<?php
+
+namespace App\Models;
+
+use Illuminate\Database\Eloquent\Model;
+
+class Tenant extends Model
+{
+    protected $fillable = [
+        'name',
+        'slug',
+        'domain',
+        'description',
+        'is_active',
+    ];
+
+    public function users()
+    {
+        return $this->hasMany(User::class);
+    }
+}
