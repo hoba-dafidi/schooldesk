@@ -1,0 +1,51 @@
+🎓 SCHOOL ADMIN DASHBOARD METRICS
+🔹 Academic Metrics
+Metric	Description
+📘 Total Students	Total number of registered students in the school
+🧑‍🏫 Total Staff	Teachers + non-teaching staff
+🏫 Total Classes	Number of academic classes or departments
+📚 Subjects Offered	Total number of subjects/courses
+📝 Active Exams	Number of ongoing exams or assessments
+
+🔹 Engagement Metrics
+Metric	Description
+👁 Dashboard Visits	Number of times admin/staff accessed dashboard
+💬 Active Tickets	Open or unresolved support tickets
+🎯 Task Completion	% of completed tasks/assignments for teachers/staff
+🕒 Time Spent	Average time spent on platform per session (optional)
+
+🔹 Financial / Subscription Metrics
+Metric	Description
+💳 Current Plan	Subscription plan name (e.g. Standard, Premium)
+📆 Plan Expiry	Countdown or expiry date of current subscription
+💰 Monthly Revenue	Amount generated from current subscription
+🎟 Coupons Used	Count of discount codes applied (if enabled)
+
+🔹 Activity Logs / Trends
+Metric	Description
+🔄 Recent Activity	List of recent actions: added students, updated class, etc.
+📈 Weekly Growth	% increase/decrease in students, logins, or tickets
+🧾 Invoice History	Downloadable or recent subscription invoices
+📌 Latest Notifications	System-wide or admin-specific alerts
+
+🧑‍💼 SUPER ADMIN / PLATFORM OWNER METRICS
+If you're the platform owner (admin of all schools), you might also track:
+
+Metric	Description
+🏫 Schools on Platform	Total number of registered schools
+👥 Users	Total users across all schools
+💸 Total Revenue	Aggregated revenue from all active subscriptions
+⏳ Expiring Plans	Count of subscriptions nearing expiration
+🚨 Open Tickets	Total unresolved support tickets
+📊 Top Performing Schools	Based on usage, renewals, engagement
+
+🔧 How to Display
+You can use:
+
+<x-dashboard.card-metric> for KPIs
+
+ApexCharts (already set up) for bar/line charts
+
+Tables for history (e.g. invoices, tickets, activity logs)
+
+Timeline components for recent actions

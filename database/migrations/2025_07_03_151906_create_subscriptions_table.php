@@ -17,10 +17,11 @@ return new class extends Migration
         // Foreign keys
         $table->foreignId('user_id')->constrained()->onDelete('cascade');
         $table->foreignId('plan_id')->constrained()->onDelete('cascade');
+        $table->foreignId('school_id')->nullable()->constrained()->onDelete('cascade');
         $table->foreignId('payment_gateway_id')->nullable()->constrained()->nullOnDelete();
 
         // Subscription details
-        $table->enum('status', ['active', 'trialing', 'cancelled', 'expired'])->default('active'); // active, cancelled, expired, trialing, etc.
+        $table->enum('status', ['active', 'trialing','pending', 'cancelled', 'expired'])->default('pending'); // active, cancelled, expired, pending, trialing, etc.
         $table->unsignedInteger('quantity')->default(1);
 
         $table->timestamp('starts_at')->nullable();

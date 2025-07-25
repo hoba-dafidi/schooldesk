@@ -16,7 +16,9 @@ return new class extends Migration
             $table->string('name')->unique();
             $table->string('slug')->unique();
             $table->decimal('price', 10, 2);
+            $table->integer('duration_days')->default(90); // default 1 year (90 days)
             $table->string('currency', 3)->default('USD');
+            $table->string('interval')->default('monthly'); // monthly, yearly, etc.
             $table->text('description')->nullable();
             $table->json('features')->nullable(); // Store features as JSON
             $table->boolean('is_active')->default(true);

@@ -57,13 +57,13 @@
                                         class="badge bg-{{ $gateway->sandbox_mode ? 'warning' : 'info' }}">{{ $gateway->sandbox_mode ? 'Sandbox' : 'Live' }}</span>
                                 </td>
                                 <td class="text-nowrap">
-                                    <button class="btn btn-sm btn-outline-primary"
-                                        onclick="showGatewayDetails(@json($gateway))" data-bs-toggle="modal"
+                                    <button class="btn btn-sm btn-outline-primary view-gateway-btn"
+                                        data-gateway='@json($gateway)' data-bs-toggle="modal"
                                         data-bs-target="#viewGatewayModal">
                                         <i class="bx bx-show"></i>
                                     </button>
-                                    <button class="btn btn-sm btn-outline-info"
-                                        onclick="editGateway(@json($gateway))" data-bs-toggle="modal"
+                                    <button class="btn btn-sm btn-outline-info edit-gateway-btn"
+                                        data-gateway='@json($gateway)' data-bs-toggle="modal"
                                         data-bs-target="#gatewayModal">
                                         <i class="bx bx-edit"></i>
                                     </button>
@@ -183,11 +183,15 @@
 
                         <div class="col-md-6">
                             <div class="form-check">
-                                <input type="checkbox" class="form-check-input" name="is_active" id="gatewayActive">
+                                <input type="hidden" name="is_active" value="0">
+                                <input type="checkbox" class="form-check-input" name="is_active" id="gatewayActive"
+                                    value="1">
                                 <label class="form-check-label" for="gatewayActive">Active</label>
                             </div>
                             <div class="form-check">
-                                <input type="checkbox" class="form-check-input" name="sandbox_mode" id="gatewaySandbox">
+                                <input type="hidden" name="sandbox_mode" value="0">
+                                <input type="checkbox" class="form-check-input" name="sandbox_mode" id="gatewaySandbox"
+                                    value="1">
                                 <label class="form-check-label" for="gatewaySandbox">Sandbox Mode</label>
                             </div>
                         </div>
@@ -263,6 +267,22 @@
                     target.type = 'password';
                     icon.classList.replace('bx-hide', 'bx-show');
                 }
+            });
+        });
+
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.edit-gateway-btn').forEach(btn => {
+                btn.addEventListener('click', function() {
+                    const gateway = JSON.parse(this.dataset.gateway);
+                    editGateway(gateway);
+                });
+            });
+
+            document.querySelectorAll('.view-gateway-btn').forEach(btn => {
+                btn.addEventListener('click', function() {
+                    const gateway = JSON.parse(this.dataset.gateway);
+                    showGatewayDetails(gateway);
+                });
             });
         });
 

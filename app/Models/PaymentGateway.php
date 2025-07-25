@@ -13,6 +13,7 @@ class PaymentGateway extends Model
         'name',
         'slug',
         'is_active',
+        'subscription_id',
         'description',
         'driver_class',        // Optional fully qualified service class name
         'api_key',

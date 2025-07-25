@@ -16,9 +16,11 @@ return new class extends Migration
             $table->foreignId('user_id')->constrained()->onDelete('cascade');
             $table->string('invoice_number')->unique();
             $table->foreignId('subscription_id')->nullable()->constrained()->onDelete('set null'); // Optional link
+            $table->foreignId('school_id')->nullable()->constrained()->onDelete('set null');
+            $table->foreignId('plan_id')->nullable()->constrained()->onDelete('set null');
             $table->decimal('total_amount', 10, 2);
             $table->string('currency', 3)->default('USD');
-            $table->enum('status', ['pending', 'paid', 'void', 'refunded'])->default('pending');
+            $table->enum('status', ['unpaid', 'paid', 'void', 'refunded'])->default('unpaid');
             $table->timestamp('due_date')->nullable();
             $table->timestamp('paid_at')->nullable();
             $table->string('payment_gateway_id')->nullable(); // Transaction ID from payment gateway
@@ -28,7 +30,7 @@ return new class extends Migration
             $table->decimal('discount_amount', 10, 2)->default(0);
             $table->text('notes')->nullable();
             $table->json('meta')->nullable();
-            $table->string('external_reference')->nullable();
+            $table->string('reference')->nullable();
 
             $table->timestamps();
         });

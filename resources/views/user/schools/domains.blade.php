@@ -37,16 +37,17 @@
         @endphp
 
         <!-- Subdomain Card -->
+        <!-- Subdomain Card -->
         <div class="card mb-4">
             <div class="card-header d-flex justify-content-between">
                 <h5>Subdomains</h5>
-                <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#subdomainModal"
+                <button class="btn btn-primary btn-sm" data-bs-toggle="modal" data-bs-target="#subdomainModal"
                     onclick="resetSubdomainForm()" {{ $hasSubdomain ? 'disabled' : '' }}>
                     <i class="bx bx-plus"></i> Add Subdomain
                 </button>
             </div>
             <div class="table-responsive">
-                <table class="table">
+                <table class="table" id="subdomainsTable">
                     <thead>
                         <tr>
                             <th>School</th>
@@ -76,7 +77,7 @@
                                     <td class="d-flex gap-1">
                                         <button class="btn btn-sm btn-info" data-bs-toggle="modal"
                                             data-bs-target="#subdomainModal"
-                                            onclick='editSubdomain(@json($domain))''>
+                                            onclick='editSubdomain(@json($domain))'>
                                             Edit
                                         </button>
                                         <form method="POST"
@@ -90,29 +91,30 @@
                                         </form>
                                     </td>
                                 </tr>
-                            @else
-                                <tr>
-                                    <td colspan="7" class="text-center text-muted">No subdomain found for
-                                        {{ $school->name }}</td>
-                                </tr>
                             @endif
                         @endforeach
                     </tbody>
                 </table>
             </div>
+
+            @if ($schools->every(fn($school) => !$school->subdomain))
+                <div class="text-center text-muted py-3">No subdomains found for any school.</div>
+            @endif
         </div>
 
+
+        <!-- Custom Domain Card -->
         <!-- Custom Domain Card -->
         <div class="card">
             <div class="card-header d-flex justify-content-between">
                 <h5>Custom Domains</h5>
-                <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#customDomainModal"
+                <button class="btn btn-primary btn-sm" data-bs-toggle="modal" data-bs-target="#customDomainModal"
                     onclick="resetCustomDomainForm()" {{ $hasCustomDomain ? 'disabled' : '' }}>
                     <i class="bx bx-plus"></i> Add Custom Domain
                 </button>
             </div>
             <div class="table-responsive">
-                <table class="table">
+                <table class="table" id="customDomainsTable">
                     <thead>
                         <tr>
                             <th>School</th>
@@ -156,18 +158,17 @@
                                         </form>
                                     </td>
                                 </tr>
-                            @else
-                                <tr>
-                                    <td colspan="7" class="text-center text-muted">No custom domain found for
-                                        {{ $school->name }}</td>
-                                </tr>
                             @endif
                         @endforeach
-
                     </tbody>
                 </table>
             </div>
+
+            @if ($schools->every(fn($school) => !$school->customDomain))
+                <div class="text-center text-muted py-3">No custom domains found for any school.</div>
+            @endif
         </div>
+
 
         <!-- Subdomain Modal -->
         <div class="modal fade" id="subdomainModal" tabindex="-1" aria-labelledby="subdomainModalLabel" aria-hidden="true">
@@ -345,7 +346,7 @@
             document.getElementById('link').value = domain.link;
             document.getElementById('db_host').value = domain.db_host;
             document.getElementById('db_username').value = domain.db_username;
-            document.getElementById('db_password').value = '';
+            document.getElementById('db_password').value = domain.db_password;
             document.getElementById('db_table').value = domain.db_table;
             document.getElementById('is_active').value = domain.is_active ? '1' : '0';
             document.getElementById('subdomainModalLabel').textContent = 'Edit Subdomain';
@@ -381,5 +382,35 @@
             document.getElementById('custom_is_active').value = domain.is_active ? '1' : '0';
             document.getElementById('customDomainModalLabel').textContent = 'Edit Subdomain';
         }
+
+        document.addEventListener('DOMContentLoaded', function() {
+            // Initialize Subdomain table
+            $('#subdomainsTable').DataTable({
+                responsive: true,
+                pageLength: 10,
+                autoWidth: false,
+                columnDefs: [{
+                    orderable: false,
+                    targets: -1 // Disable sort on Actions column
+                }]
+            });
+
+            // Initialize Custom Domain table
+            $('#customDomainsTable').DataTable({
+                responsive: true,
+                pageLength: 10,
+                autoWidth: false,
+                columnDefs: [{
+                    orderable: false,
+                    targets: -1 // Disable sort on Actions column
+                }]
+            });
+
+            // Bootstrap tooltips
+            const tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
+            tooltipTriggerList.map(function(tooltipTriggerEl) {
+                return new bootstrap.Tooltip(tooltipTriggerEl);
+            });
+        });
     </script>
 @endpush

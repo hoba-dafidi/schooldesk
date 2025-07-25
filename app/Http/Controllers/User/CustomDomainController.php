@@ -40,7 +40,13 @@ class CustomDomainController extends Controller
             abort(403);
         }
 
-        CustomDomain::create($validated);
+        $customDomain = CustomDomain::create($validated);
+
+        activity()
+              ->causedBy(Auth::user())
+              ->performedOn($customDomain)
+              ->withProperties(['plan' => $customDomain->link])
+              ->log('Custom Domain Created');
 
         return redirect()->route('user.custom-domains.index')->with('success', 'Custom domain created.');
     }
@@ -67,6 +73,12 @@ class CustomDomainController extends Controller
 
         $customDomain->update($validated);
 
+        activity()
+              ->causedBy(Auth::user())
+              ->performedOn($customDomain)
+              ->withProperties(['plan' => $customDomain->link])
+              ->log('Custom Domain Updated');
+
         return redirect()->route('user.custom-domains.index')->with('success', 'Custom domain updated.');
     }
 
@@ -74,6 +86,12 @@ class CustomDomainController extends Controller
     {
         $this->authorizeAccess($customDomain);
         $customDomain->delete();
+
+        activity()
+              ->causedBy(Auth::user())
+              ->performedOn($customDomain)
+              ->withProperties(['plan' => $customDomain->link])
+              ->log('Custom Domain Deleted');
         return redirect()->route('user.custom-domains.index')->with('success', 'Custom domain deleted.');
     }
 

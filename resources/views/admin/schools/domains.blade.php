@@ -1,57 +1,76 @@
 @extends('layouts/contentNavbarLayout')
 
-@section('title', 'Manage School Domains')
+@section('title', 'Manage Domains')
 
 @section('content')
     <div class="container-xxl flex-grow-1 container-p-y">
-        <h4 class="fw-bold py-3 mb-4 d-flex justify-content-between align-items-center">
-            Manage School Domains
-            <button class="btn btn-primary" onclick="openCreateModal()">
-                <i class="bx bx-plus"></i> Create New
-            </button>
-        </h4>
+        <h4 class="fw-bold mb-4">Manage Domains</h4>
 
-        <!-- Domains List -->
-        <div class="card">
-            <div class="card-datatable table-responsive">
-                <table class="table table-bordered datatables-basic">
-                    <thead>
+        <div class="card shadow-sm">
+            <div class="card-body table-responsive">
+                <table class="table table-bordered table-hover table-striped align-middle" id="domainsTable">
+                    <thead class="table-light">
                         <tr>
-                            <th>#</th>
+                            <th>School</th>
                             <th>Type</th>
                             <th>Link</th>
-                            <th>DB Host</th>
-                            <th>DB User</th>
-                            <th>Table</th>
-                            <th>Active</th>
+                            <th>Status</th>
+                            <th>Verified</th>
+                            <th>Created</th>
                             <th>Actions</th>
                         </tr>
                     </thead>
                     <tbody>
-                        @foreach ($domains as $domain)
+                        @foreach ($subdomains as $sub)
                             <tr>
-                                <td>{{ $loop->iteration }}</td>
-                                <td><span class="badge bg-label-info">{{ ucfirst($domain->type) }}</span></td>
-                                <td><a href="http://{{ $domain->link }}" target="_blank">{{ $domain->link }}</a></td>
-                                <td>{{ $domain->db_host }}</td>
-                                <td>{{ $domain->db_username }}</td>
-                                <td>{{ $domain->table_name }}</td>
-                                <td>
-                                    <span class="badge bg-label-{{ $domain->is_active ? 'success' : 'secondary' }}">
-                                        {{ $domain->is_active ? 'Yes' : 'No' }}
-                                    </span>
+                                <td>{{ $sub->school->name ?? '-' }}</td>
+                                <td><span class="badge bg-secondary">Subdomain</span></td>
+                                <td>{{ $sub->link }}</td>
+                                <td><span
+                                        class="badge bg-{{ $sub->status === 'active' ? 'success' : 'secondary' }}">{{ ucfirst($sub->status) }}</span>
                                 </td>
+                                <td>{!! $sub->is_verified ? '<span class="badge bg-success">Yes</span>' : '<span class="badge bg-danger">No</span>' !!}</td>
+                                <td>{{ $sub->created_at->format('d M, Y') }}</td>
                                 <td>
-                                    <button class="btn btn-sm btn-primary"
-                                        onclick="openEditModal(@json($domain))">
-                                        <i class="bx bx-edit"></i>
-                                    </button>
-                                    <form action="{{ route('domains.destroy', $domain->id) }}" method="POST"
-                                        style="display:inline">
-                                        @csrf
-                                        @method('DELETE')
-                                        <button type="submit" class="btn btn-sm btn-danger">Delete</button>
-                                    </form>
+                                    <div class="d-flex gap-1">
+                                        <button class="btn btn-sm btn-info view-domain-btn"
+                                            data-domain='@json($sub)' data-type="subdomain">
+                                            <i class="bx bx-show"></i>
+                                        </button>
+                                        <form action="{{ route('admin.subdomains.destroy', $sub->id) }}" method="POST"
+                                            onsubmit="return confirm('Delete this subdomain?');">
+                                            @csrf @method('DELETE')
+                                            <button class="btn btn-sm btn-danger"><i class="bx bx-trash"></i></button>
+                                        </form>
+                                    </div>
+                                </td>
+                            </tr>
+                        @endforeach
+
+                        @foreach ($customDomains as $custom)
+                            <tr>
+                                <td>{{ $custom->school->name ?? '-' }}</td>
+                                <td><span class="badge bg-primary">Custom</span></td>
+                                <td>{{ $custom->link }}</td>
+                                <td><span
+                                        class="badge bg-{{ $custom->status === 'active' ? 'success' : 'secondary' }}">{{ ucfirst($custom->status) }}</span>
+                                </td>
+                                <td>{!! $custom->is_verified
+                                    ? '<span class="badge bg-success">Yes</span>'
+                                    : '<span class="badge bg-danger">No</span>' !!}</td>
+                                <td>{{ $custom->created_at->format('d M, Y') }}</td>
+                                <td>
+                                    <div class="d-flex gap-1">
+                                        <button class="btn btn-sm btn-info view-domain-btn"
+                                            data-domain='@json($custom)' data-type="custom">
+                                            <i class="bx bx-show"></i>
+                                        </button>
+                                        <form action="{{ route('admin.custom-domains.destroy', $custom->id) }}"
+                                            method="POST" onsubmit="return confirm('Delete this custom domain?');">
+                                            @csrf @method('DELETE')
+                                            <button class="btn btn-sm btn-danger"><i class="bx bx-trash"></i></button>
+                                        </form>
+                                    </div>
                                 </td>
                             </tr>
                         @endforeach
@@ -59,120 +78,73 @@
                 </table>
             </div>
         </div>
+    </div>
 
-        <!-- Edit/Create Domain Modal -->
-        <div class="modal fade" id="editDomainModal" tabindex="-1" aria-labelledby="editDomainModalLabel"
-            aria-hidden="true">
-            <div class="modal-dialog modal-lg">
-                <div class="modal-content">
-                    <div class="modal-header">
-                        <h5 class="modal-title" id="editDomainModalLabel">Edit Domain</h5>
-                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                    </div>
-                    <div class="modal-body">
-                        <form id="editDomainForm" method="POST">
-                            @csrf
-                            <input type="hidden" name="_method" value="PUT" id="_method">
-                            <input type="hidden" name="id" id="domain_id">
-                            <div class="row mb-3">
-                                <div class="col-md-6">
-                                    <label class="form-label">Domain Type</label>
-                                    <select class="form-select" name="type" id="type" required>
-                                        <option value="subdomain">Subdomain</option>
-                                        <option value="custom_domain">Custom Domain</option>
-                                    </select>
-                                </div>
-                                <div class="col-md-6">
-                                    <label class="form-label">Domain Link</label>
-                                    <input type="text" class="form-control" name="link" id="link"
-                                        placeholder="e.g. school.example.com" required>
-                                </div>
-                            </div>
-                            <div class="row mb-3">
-                                <div class="col-md-4">
-                                    <label class="form-label">Is Active?</label>
-                                    <select class="form-select" name="is_active" id="is_active" required>
-                                        <option value="1">Yes</option>
-                                        <option value="0">No</option>
-                                    </select>
-                                </div>
-                                <div class="col-md-4">
-                                    <label class="form-label">DB Host</label>
-                                    <input type="text" class="form-control" name="db_host" id="db_host"
-                                        placeholder="127.0.0.1" required>
-                                </div>
-                                <div class="col-md-4">
-                                    <label class="form-label">DB Name</label>
-                                    <input type="text" class="form-control" name="db_name" id="db_name"
-                                        placeholder="school_db" required>
-                                </div>
-                            </div>
-                            <div class="row mb-3">
-                                <div class="col-md-6">
-                                    <label class="form-label">DB Username</label>
-                                    <input type="text" class="form-control" name="db_username" id="db_username"
-                                        placeholder="root" required>
-                                </div>
-                                <div class="col-md-6">
-                                    <label class="form-label">DB Password</label>
-                                    <div class="input-group input-group-merge">
-                                        <input type="password" class="form-control" name="db_password" id="db_password"
-                                            placeholder="••••••••">
-                                        <span class="input-group-text cursor-pointer" onclick="togglePassword()"><i
-                                                class="bx bx-hide"></i></span>
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="modal-footer">
-                                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                                <button type="submit" class="btn btn-success">Save</button>
-                            </div>
-                        </form>
-                    </div>
+    {{-- View Domain Modal --}}
+    <div class="modal fade" id="viewDomainModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered modal-md">
+            <div class="modal-content shadow-lg border-0 rounded-3">
+                <div class="modal-header bg-primary text-white">
+                    <h5 class="modal-title">Domain Details</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"
+                        aria-label="Close"></button>
+                </div>
+                <div class="modal-body px-4 py-3">
+                    <p><strong>Type:</strong> <span class="modal-type badge"></span></p>
+                    <p><strong>Domain:</strong> <span class="modal-domain fw-bold"></span></p>
+                    <p><strong>Status:</strong> <span class="modal-status badge"></span></p>
+                    <p><strong>Verified:</strong> <span class="modal-verified badge"></span></p>
+                    <p><strong>School:</strong> <span class="modal-school text-muted"></span></p>
+                    <p><strong>Created:</strong> <span class="modal-created small text-muted"></span></p>
+                </div>
+                <div class="modal-footer bg-light px-3 py-2">
+                    <button class="btn btn-outline-secondary" data-bs-dismiss="modal">Close</button>
                 </div>
             </div>
         </div>
     </div>
-
-    <script>
-        function openEditModal(domain) {
-            const form = document.getElementById('editDomainForm');
-            form.action = `/domains/${domain.id}`;
-            document.getElementById('editDomainModalLabel').textContent = 'Edit Domain';
-            document.getElementById('_method').value = 'PUT';
-            document.getElementById('domain_id').value = domain.id;
-            document.getElementById('type').value = domain.type;
-            document.getElementById('link').value = domain.link;
-            document.getElementById('is_active').value = domain.is_active ? '1' : '0';
-            document.getElementById('db_host').value = domain.db_host;
-            document.getElementById('db_name').value = domain.db_name;
-            document.getElementById('db_username').value = domain.db_username;
-            document.getElementById('db_password').value = domain.db_password;
-            new bootstrap.Modal(document.getElementById('editDomainModal')).show();
-        }
-
-        function openCreateModal() {
-            const form = document.getElementById('editDomainForm');
-            form.reset();
-            form.action = '/domains';
-            document.getElementById('editDomainModalLabel').textContent = 'Create Domain';
-            document.getElementById('_method').value = 'POST';
-            document.getElementById('domain_id').value = '';
-            new bootstrap.Modal(document.getElementById('editDomainModal')).show();
-        }
-
-        function togglePassword() {
-            const input = document.getElementById('db_password');
-            const icon = event.currentTarget.querySelector('i');
-            if (input.type === 'password') {
-                input.type = 'text';
-                icon.classList.remove('bx-hide');
-                icon.classList.add('bx-show');
-            } else {
-                input.type = 'password';
-                icon.classList.remove('bx-show');
-                icon.classList.add('bx-hide');
-            }
-        }
-    </script>
 @endsection
+
+@push('scripts')
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const table = document.querySelector('#domainsTable');
+            if (table) {
+                new DataTable(table, {
+                    responsive: true,
+                    perPage: 10,
+                });
+            }
+
+            const modal = document.getElementById('viewDomainModal');
+
+            document.querySelectorAll('.view-domain-btn').forEach(button => {
+                button.addEventListener('click', function() {
+                    const domain = JSON.parse(this.getAttribute('data-domain'));
+                    const type = this.getAttribute('data-type');
+
+                    modal.querySelector('.modal-type').textContent = type === 'custom' ?
+                        'Custom Domain' : 'Subdomain';
+                    modal.querySelector('.modal-type').className = 'badge bg-' + (type ===
+                        'custom' ? 'primary' : 'secondary') + ' modal-type';
+
+                    modal.querySelector('.modal-domain').textContent = domain.link;
+                    modal.querySelector('.modal-status').textContent = domain.status;
+                    modal.querySelector('.modal-status').className = 'badge bg-' + (domain
+                        .status === 'active' ? 'success' : 'secondary') + ' modal-status';
+
+                    modal.querySelector('.modal-verified').textContent = domain.is_verified ?
+                        'Verified' : 'Unverified';
+                    modal.querySelector('.modal-verified').className = 'badge bg-' + (domain
+                        .is_verified ? 'success' : 'danger') + ' modal-verified';
+
+                    modal.querySelector('.modal-school').textContent = domain.school?.name ?? '—';
+                    modal.querySelector('.modal-created').textContent = new Date(domain.created_at)
+                        .toLocaleDateString();
+
+                    new bootstrap.Modal(modal).show();
+                });
+            });
+        });
+    </script>
+@endpush

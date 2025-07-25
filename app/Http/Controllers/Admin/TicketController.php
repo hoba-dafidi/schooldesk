@@ -9,9 +9,12 @@ use App\Http\Controllers\Controller;
 use App\Models\Ticket;
 use App\Models\TicketAttachment;
 use App\Models\TicketMessage;
+use App\Models\User;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\View;
+use Illuminate\Validation\Rule;
 use Illuminate\Validation\Rules\Enum;
 
 class TicketController extends Controller
@@ -36,8 +39,10 @@ class TicketController extends Controller
         }
 
         $tickets = $query->latest()->paginate(10);
+        // ✅ Only users with admin, support sales or developer role
+        $agents = User::role(['admin', 'support', 'sales', 'developer'])->get();
 
-        return view('admin.tickets.index', compact('tickets'));
+        return view('admin.tickets.index', compact('tickets', 'agents'));
     }
 
     /**
@@ -79,18 +84,43 @@ class TicketController extends Controller
      */
     public function store(Request $request)
     {
-        $validated = $request->validate([
+        $request->validate([
             'subject' => 'required|string|max:255',
+            'priority' => 'required|in:low,medium,high',
             'message' => 'required|string',
-            'priority' => 'required|in:' . implode(',', array_column(TicketPriority::cases(), 'value')),
+            'attachments.*' => 'file|max:5120', // max 5MB each
         ]);
 
-        $request->user()->tickets()->create([
-            ...$validated,
+        // 1. Create ticket
+        $ticket = Ticket::create([
+            'user_id' => Auth::id(),
+            'subject' => $request->subject,
+            'priority' => $request->priority,
             'status' => TicketStatus::Open,
+            'description' => $request->message, // Set initial message as description
         ]);
 
-        return back()->with('success', 'Ticket created successfully.');
+        // 2. Create first message
+        $message = TicketMessage::create([
+            'ticket_id' => $ticket->id,
+            'user_id' => Auth::id(),
+            'message' => $request->message,
+        ]);
+
+        // 3. Handle attachments
+        if ($request->hasFile('attachments')) {
+            foreach ($request->file('attachments') as $file) {
+                $path = $file->store('ticket_attachments');
+
+                TicketAttachment::create([
+                    'ticket_message_id' => $message->id,
+                    'file_path' => $path,
+                    'original_name' => $file->getClientOriginalName(),
+                ]);
+            }
+        }
+
+        return redirect()->back()->with('success', 'Ticket created successfully with message and attachments.');
     }
 
     /**
@@ -105,7 +135,7 @@ class TicketController extends Controller
 
         $message = $ticket->messages()->create([
             'user_id' => auth()->id(),
-            'content' => $validated['message'],
+            'message' => $validated['message'],
         ]);
 
         if ($request->hasFile('attachment')) {
@@ -120,7 +150,7 @@ class TicketController extends Controller
 
         $ticket->update(['status' => TicketStatus::InProgress]);
 
-        $html = View::make('partials.ticket-message', ['msg' => $message])->render();
+        $html = View::make('admin.tickets.partials.ticket-message', ['message' => $message])->render();
         event(new TicketMessageCreated($message, $html));
 
         return response()->json(['success' => true, 'ticket_id' => $ticket->id]);
@@ -131,26 +161,64 @@ class TicketController extends Controller
      */
     public function messages(Ticket $ticket)
     {
-        return response()->json(
-            $ticket->messages()
-                ->with(['user', 'attachments'])
-                ->latest()
-                ->get()
-                ->map(fn($msg) => [
-                    'user' => [
-                        'name' => $msg->user->name,
-                        'is_admin' => $msg->user->hasRole('admin'),
-                        'avatar' => $msg->user->avatar_url ?? asset('default-avatar.png'),
-                    ],
-                    'content' => $msg->content,
-                    'time' => $msg->created_at->diffForHumans(),
-                    'attachments' => $msg->attachments->map(fn($a) => [
-                        'url' => Storage::disk('public')->url($a->file_path),
-                        'name' => $a->original_name,
-                    ]),
-                ])
-        );
+        // return response()->json(
+        //     $ticket->messages()
+        //         ->with(['user', 'attachments'])
+        //         ->latest()
+        //         ->get()
+        //         // ->map(fn($msg) => [
+        //         //     'user' => [
+        //         //         'name' => $msg->user->name,
+        //         //         'is_admin' => $msg->user->hasRole('admin'),
+        //         //         'avatar' => $msg->user->avatar_url ?? asset('default-avatar.png'),
+        //         //     ],
+        //         //     'content' => $msg->content,
+        //         //     'time' => $msg->created_at->diffForHumans(),
+        //         //     'attachments' => $msg->attachments->map(fn($a) => [
+        //         //         'url' => Storage::disk('public')->url($a->file_path),
+        //         //         'name' => $a->original_name,
+        //         //     ]),
+        //         // ])
+        // );
+
+        $messages = $ticket->messages()->with('user', 'attachments')->latest()->get();
+
+        return view('admin.tickets.partials.thread', compact('messages'));
     }
+
+    public function updateStatus(Request $request, Ticket $ticket)
+    {
+        $request->validate([
+            'status' => ['required', Rule::in(['open', 'pending', 'closed', 'escalated'])]
+        ]);
+
+        $ticket->status = $request->status;
+        $ticket->save();
+
+        return response()->json(['success' => true]);
+    }
+
+
+    public function show(Ticket $ticket)
+    {
+        // return response()->json($ticket->messages()->with('attachments')->get());
+        return response()->json($ticket->load(['messages.attachments']));
+    }
+
+    public function assign(Request $request, Ticket $ticket)
+    {
+        $request->validate([
+            'assigned_to' => 'nullable|exists:users,id',
+        ]);
+
+
+        $ticket->assigned_to = $request->assigned_to;
+        $ticket->save();
+
+        return response()->json(['success' => 'Ticket assigned successfully.']);
+        // return back()->with('success', 'Ticket assigned successfully.');
+    }
+
 
     /**
      * Delete a ticket (optional).

@@ -16,6 +16,7 @@ return new class extends Migration
             $table->foreignId('user_id')->constrained('users')->onDelete('cascade'); // Changed to user_id as per model
             $table->string('name')->unique();
             $table->enum('status', ['pending', 'active', 'suspended', 'deleted'])->default('pending');
+            $table->foreignId('plan_id')->nullable()->constrained('plans')->nullOnDelete();
             $table->boolean('is_paid_plan')->default(false); // Indicates if they are on a paid plan (e.g., custom domain)
             $table->string('address')->nullable();
             $table->string('email')->nullable();

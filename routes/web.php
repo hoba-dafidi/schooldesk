@@ -1,16 +1,13 @@
 <?php
 
-use App\Http\Controllers\Admin\InvoiceController;
-use App\Http\Controllers\Admin\PaymentGatewayController;
-use App\Http\Controllers\Admin\PlanController;
-use App\Http\Controllers\Admin\SubscriptionController;
-use App\Http\Controllers\Admin\TicketController;
+
 
 use App\Http\Controllers\Auth\EmailVerificationController;
 use App\Http\Controllers\Auth\ForgotPasswordController;
 use App\Http\Controllers\Auth\LoginController;
 use App\Http\Controllers\Auth\LogoutController;
 use App\Http\Controllers\Auth\RegisterController;
+
 use App\Http\Controllers\Auth\ResetPasswordController;
 use App\Http\Controllers\authentications\ForgotPasswordBasic;
 use App\Http\Controllers\authentications\LoginBasic;
@@ -35,17 +32,26 @@ use App\Http\Controllers\pages\AccountSettingsNotifications;
 use App\Http\Controllers\pages\MiscError;
 use App\Http\Controllers\pages\MiscUnderMaintenance;
 use App\Http\Controllers\tables\Basic as TablesBasic;
+use App\Http\Controllers\User\DashboardController;
 use App\Http\Controllers\User\DomainController;
+use App\Http\Controllers\User\InvoiceController;
+use App\Http\Controllers\User\NotificationController;
 use App\Http\Controllers\User\ProfileController;
+
+
+
+
 use App\Http\Controllers\User\SchoolController;
+use App\Http\Controllers\User\SchoolSubscriptionController;
+use App\Http\Controllers\User\TicketController;
 use App\Http\Controllers\User\UserDomainController;
+
+
 use App\Http\Controllers\user_interface\Accordion;
 use App\Http\Controllers\user_interface\Alerts;
 use App\Http\Controllers\user_interface\Badges;
 use App\Http\Controllers\user_interface\Buttons;
 use App\Http\Controllers\user_interface\Carousel;
-
-
 use App\Http\Controllers\user_interface\Collapse;
 use App\Http\Controllers\user_interface\Dropdowns;
 use App\Http\Controllers\user_interface\Footer;
@@ -61,7 +67,14 @@ use App\Http\Controllers\user_interface\Toasts;
 use App\Http\Controllers\user_interface\TooltipsPopovers;
 use App\Http\Controllers\user_interface\Typography;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Broadcast;
 use Illuminate\Support\Facades\Route;
+
+
+
+
+
+
 
 
 
@@ -92,12 +105,12 @@ Route::get('/email/verify', [EmailVerificationController::class, 'notice'])->mid
 Route::get('/email/verify/{id}/{hash}', [EmailVerificationController::class, 'verify'])->middleware(['auth', 'signed'])->name('verification.verify');
 Route::post('/email/resend', [EmailVerificationController::class, 'resend'])->middleware(['auth'])->name('verification.resend');
 
+Broadcast::routes(['middleware' => ['auth']]);
 
 
 Route::middleware(['auth'])->group(function () {
-    Route::get('/dashboard', fn () => view('user.dashboard'))
-        ->middleware('role:user')
-        ->name('dashboard');
+
+    Route::get('/dashboard', [DashboardController::class, 'index'])->middleware('role:user')->name('dashboard');
 
     Route::get('/admin/dashboard', fn () => view('admin.dashboard'))
         ->middleware('role:admin')
@@ -135,69 +148,57 @@ Route::middleware(['auth', 'role:user'])->prefix('user')->name('user.')->group(f
     Route::delete('/domains/custom/{id}', [UserDomainController::class, 'destroyCustomDomain'])->name('domains.custom.destroy');
 
      // School Management
-    Route::get('/schools', [SchoolController::class, 'index'])->name('schools.index');
-    Route::post('/schools', [SchoolController::class, 'store'])->name('schools.store');
-    Route::put('/schools/{school}', [SchoolController::class, 'update'])->name('schools.update');
-    Route::delete('/schools/{school}', [SchoolController::class, 'destroy'])->name('schools.destroy');
+    Route::prefix('schools')->name('schools.')->middleware(['auth', 'role:user'])->group(function () {
+        Route::get('/', [SchoolController::class, 'index'])->name('index');
+        Route::get('/create', [SchoolController::class, 'create'])->name('create');
+        Route::post('/', [SchoolController::class, 'store'])->name('store');
+
+        Route::get('/{school}/edit', [SchoolController::class, 'edit'])->name('edit');
+        Route::put('/{school}', [SchoolController::class, 'update'])->name('update');
+        Route::delete('/{school}', [SchoolController::class, 'destroy'])->name('destroy');
+
+        // Custom domain update (optional)
+        Route::post('/{school}/custom-domain', [SchoolController::class, 'updateCustomDomain'])->name('custom-domain');
+        Route::get('/{school}/current-subscription', [SchoolController::class, 'getCurrentSubscription'])->name('current-subscription');
+        // Route::post('/subscribe', [SchoolController::class, 'subscribe'])->name('subscribe');
+        Route::post('/{school}/subscribe', [SchoolSubscriptionController::class, 'subscribe'])->name('subscribe');
+        Route::get('/{school}/subscriptions', [SchoolSubscriptionController::class, 'history'])->name('subscriptions.history');
+
+        Route::post('/{school}/renew', [SchoolSubscriptionController::class, 'renew'])->name('renew');
+        Route::post('/{school}/upgrade', [SchoolSubscriptionController::class, 'upgrade'])->name('upgrade');
+
+        Route::post('/{plan}/price', [SchoolSubscriptionController::class, 'getPrice']);
+        Route::post('/{school}/cancel', [SchoolSubscriptionController::class, 'cancel'])->name('subscriptions.cancel');
+    });
+
+    Route::get('/subscriptions', [SchoolSubscriptionController::class, 'index'])->name('subscriptions.index');
 
     // Ticket
     Route::middleware(['auth'])->prefix('tickets')->name('tickets.')->group(function () {
-    Route::get('/', [\App\Http\Controllers\User\TicketController::class, 'index'])->name('index');
-    Route::get('/create', [\App\Http\Controllers\User\TicketController::class, 'create'])->name('create');
-    Route::post('/', [\App\Http\Controllers\User\TicketController::class, 'store'])->name('store');
-    Route::get('{ticket}', [\App\Http\Controllers\User\TicketController::class, 'show'])->name('show');
-    Route::post('{ticket}/reply', [\App\Http\Controllers\User\TicketController::class, 'reply'])->name('reply');
-
-});
-
-});
-
-Route::middleware(['auth', 'role:admin'])->prefix('admin')->name('admin.')->group(function () {
-    // Plans
-    Route::get('/plans', [PlanController::class, 'index'])->name('plans.index');
-    Route::get('/plans/create', [PlanController::class, 'create'])->name('plans.create');
-    Route::post('/plans', [PlanController::class, 'store'])->name('plans.store');
-    Route::get('/plans/{plan}', [PlanController::class, 'show'])->name('plans.show');
-    Route::get('/plans/{plan}/edit', [PlanController::class, 'edit'])->name('plans.edit');
-    Route::put('/plans/{plan}', [PlanController::class, 'update'])->name('plans.update');
-    Route::delete('/plans/{plan}', [PlanController::class, 'destroy'])->name('plans.destroy');
-    Route::patch('/plans/{plan}/toggle-status', [PlanController::class, 'toggleStatus'])->name('plans.toggleStatus');
-
-    // Subscriptions
-    Route::get('/subscriptions', [SubscriptionController::class, 'index'])->name('subscriptions.index');
-    Route::get('/subscriptions/{subscription}', [SubscriptionController::class, 'show'])->name('subscriptions.show');
-    Route::patch('/subscriptions/{subscription}/cancel', [SubscriptionController::class, 'cancel'])->name('subscriptions.cancel');
-    Route::patch('/subscriptions/{subscription}/resume', [SubscriptionController::class, 'resume'])->name('subscriptions.resume');
-    Route::post('/subscriptions/{subscription}/resend-invoice', [SubscriptionController::class, 'resendInvoice'])->name('subscriptions.resendInvoice');
-    Route::get('/subscriptions/export', [SubscriptionController::class, 'export'])->name('subscriptions.export');
-
-    // Invoices
-    Route::get('/invoices', [InvoiceController::class, 'index'])->name('invoices.index');
-    Route::get('/invoices/export', [InvoiceController::class, 'export'])->name('invoices.export');
-    Route::get('/invoices/{invoice}', [InvoiceController::class, 'show'])->name('invoices.show');
-    Route::post('/invoices/{invoice}/resend', [InvoiceController::class, 'resendNotification'])->name('invoices.resend');
-    Route::patch('/invoices/{invoice}/mark-paid', [InvoiceController::class, 'markAsPaid'])->name('invoices.markPaid');
-    Route::get('/invoices/{invoice}/download', [InvoiceController::class, 'download'])->name('invoices.download');
-
-    // Payment Gateway
-    Route::resource('gateways', PaymentGatewayController::class)->except(['create', 'edit', 'show']);
-    Route::patch('gateways/{gateway}/toggle-status', [PaymentGatewayController::class, 'toggleStatus'])->name('gateways.toggleStatus');
-
-    // Tickets
-    Route::prefix('tickets')->name('tickets.')->group(function () {
         Route::get('/', [TicketController::class, 'index'])->name('index');
+        Route::get('/create', [TicketController::class, 'create'])->name('create');
         Route::post('/', [TicketController::class, 'store'])->name('store');
-        Route::get('{ticket}/edit', [TicketController::class, 'edit'])->name('edit');
-        Route::put('{ticket}', [TicketController::class, 'update'])->name('update');
-        Route::delete('{ticket}', [TicketController::class, 'destroy'])->name('destroy');
-
+        Route::get('{ticket}', [TicketController::class, 'show'])->name('show');
         Route::post('{ticket}/reply', [TicketController::class, 'reply'])->name('reply');
-        Route::get('{ticket}/messages', [TicketController::class, 'messages'])->name('messages');
-        Route::post('/tickets/{ticket}', [TicketController::class, 'update'])->name('tickets.update');
 
     });
+
+    Route::get('/invoices/{invoice}', [InvoiceController::class, 'show'])->name('invoices.show');
+    Route::get('/invoices/{invoice}/download', [InvoiceController::class, 'download'])->name('invoices.download');
+    Route::post('/invoices/{invoice}/email', [InvoiceController::class, 'email'])->name('invoices.email');
+    Route::get('/invoices/{invoice}/pay', [InvoiceController::class, 'pay'])->name('invoices.pay');
+    Route::get('invoices', [InvoiceController::class, 'index'])->name('invoices.index');
+
+
+    Route::get('/notifications', [NotificationController::class, 'index'])->name('notifications.index');
+    Route::patch('/notifications/{notification}/mark', [NotificationController::class, 'markAsRead'])->name('notifications.markAsRead');
+    Route::patch('/notifications/mark-all', [NotificationController::class, 'markAllAsRead'])->name('notifications.markAllAsRead');
+
+
 });
 
+ // Paystack callback (not protected by auth in case user exits browser)
+Route::get('/paystack/callback', [InvoiceController::class, 'handlePaystackCallback'])->name('paystack.callback');
 
 
 // Main Page Route
@@ -263,3 +264,9 @@ Route::get('/form/layouts-horizontal', [HorizontalForm::class, 'index'])->name('
 
 // tables
 Route::get('/tables/basic', [TablesBasic::class, 'index'])->name('tables-basic');
+
+
+
+
+
+require __DIR__ . '/admin.php';

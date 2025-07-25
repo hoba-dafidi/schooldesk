@@ -14,6 +14,7 @@ class School extends Model
 
     protected $fillable = [
         'user_id',
+        'plan_id',
         'name',
         'status',
         'is_paid_plan',
@@ -37,10 +38,59 @@ class School extends Model
     /**
      * Relationship: The user (client) that owns the school.
      */
-    public function client()
+    public function user()
     {
         return $this->belongsTo(User::class, 'user_id');
     }
+
+    /**
+     * Relationship: The plan the school is subscribed to.
+     */
+    public function plan()
+    {
+        return $this->belongsTo(Plan::class);
+    }
+
+    /**
+     * Relationship: Subdomain assigned to the school.
+     */
+    public function subdomain()
+    {
+        return $this->hasOne(Subdomain::class);
+    }
+
+    /**
+     * Relationship: Custom domain assigned to the school.
+     */
+    public function customDomain()
+    {
+        return $this->hasOne(CustomDomain::class);
+    }
+
+    public function subscriptions()
+    {
+        return $this->hasMany(Subscription::class);
+    }
+
+    public function activeSubscription()
+    {
+        return $this->hasOne(Subscription::class)
+                    ->where('is_active', true)
+                    ->whereDate('ends_at', '>=', now());
+    }
+
+    public function currentPlan()
+    {
+        return $this->activeSubscription?->plan;
+    }
+
+    public function currentSubscription()
+    {
+        return $this->hasOne(Subscription::class)
+            ->where('status', 'active')
+            ->latest('ends_at');
+    }
+
 
     /**
      * Accessor: Get full logo URL or fallback placeholder.
@@ -68,20 +118,54 @@ class School extends Model
         return $query->where('is_paid_plan', true);
     }
 
-    public function subdomain()
-{
-    return $this->hasOne(Subdomain::class);
+    /**
+     * Check if the school is using a specific plan by slug or ID.
+     *
+     * @param string|int $plan
+     * @return bool
+     */
+    public function hasPlan($plan): bool
+    {
+        if (!$this->plan) {
+            return false;
+        }
+
+        return is_numeric($plan)
+            ? $this->plan->id === (int) $plan
+            : $this->plan->slug === $plan;
+    }
+
+    /**
+     * Get the list of features from the school's plan.
+     *
+     * @return array
+     */
+    public function getPlanFeatures(): array
+    {
+        return $this->plan?->features ?? [];
+    }
+
+    public function getStatusBadgeClassAttribute(): string
+    {
+        return [
+            'active' => 'success',
+            'pending' => 'warning',
+            'suspended' => 'secondary',
+            'deleted' => 'danger',
+        ][$this->status] ?? 'secondary';
+    }
+
+    public function getPlanBadgeClassAttribute(): string
+    {
+        $slug = strtolower($this->plan?->slug ?? '');
+
+        return [
+            'free' => 'secondary',
+            'basic' => 'info',
+            'premium' => 'success',
+            'enterprise' => 'primary',
+        ][$slug] ?? 'dark';
+    }
+
+
 }
-
-public function customDomain()
-{
-    return $this->hasOne(CustomDomain::class);
-}
-
-}
-
-// $activeSchools = School::active()->get();
-// $paidSchools = School::paid()->get();
-
-// // Access full logo URL:
-// $logoUrl = $school->logo_url;

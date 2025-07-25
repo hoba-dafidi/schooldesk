@@ -9,3 +9,7 @@ Broadcast::channel('ticket-{ticketId}', function ($user, $ticketId) {
             $q->where('user_id', $user->id)->orWhere('assigned_to', $user->id);
         })->exists();
 });
+
+Broadcast::channel('App.Models.User.{id}', function ($user, $id) {
+    return (int) $user->id === (int) $id;
+});

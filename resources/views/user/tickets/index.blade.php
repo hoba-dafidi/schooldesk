@@ -1,4 +1,4 @@
-@extends('layouts/app')
+@extends('layouts/contentNavbarLayout')
 
 @section('title', 'My Support Tickets')
 
@@ -6,7 +6,7 @@
     <div class="container py-4">
         <div class="d-flex justify-content-between align-items-center mb-4">
             <h4 class="fw-bold">My Tickets</h4>
-            <a href="{{ route('tickets.create') }}" class="btn btn-primary">
+            <a href="{{ route('user.tickets.create') }}" class="btn btn-primary">
                 <i class="fa fa-plus"></i> New Ticket
             </a>
         </div>
@@ -38,7 +38,7 @@
                             </td>
                             <td>{{ $ticket->created_at->format('d M Y') }}</td>
                             <td>
-                                <a href="{{ route('tickets.show', $ticket) }}" class="btn btn-sm btn-info">View</a>
+                                <a href="{{ route('user.tickets.show', $ticket) }}" class="btn btn-sm btn-info">View</a>
                             </td>
                         </tr>
                     @empty

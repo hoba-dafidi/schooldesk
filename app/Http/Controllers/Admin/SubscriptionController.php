@@ -15,7 +15,7 @@ class SubscriptionController extends Controller
      */
     public function index(Request $request)
 {
-    $subscriptions = \App\Models\Subscription::with(['user', 'plan', 'paymentGateway'])
+    $subscriptions = \App\Models\Subscription::with(['user', 'plan', 'gateway'])
         ->when($request->user, fn($q) => $q->whereHas('user', fn($qq) => $qq->where('email', 'like', '%' . $request->user . '%')))
         ->when($request->plan, fn($q) => $q->where('plan_id', $request->plan))
         ->when($request->status, fn($q) => $q->where('status', $request->status))

@@ -11,6 +11,7 @@ class Subscription extends Model
 
     protected $fillable = [
         'user_id',
+        'school_id',
         'plan_id',
         'payment_gateway_id',
         'status',
@@ -61,6 +62,17 @@ class Subscription extends Model
         return $this->belongsTo(Plan::class);
     }
 
+    public function gateway()
+    {
+        return $this->belongsTo(PaymentGateway::class, 'payment_gateway_id');
+    }
+
+    public function invoice()
+    {
+        return $this->hasOne(Invoice::class);
+    }
+
+
     public function isActive()
     {
         return $this->stripe_status === 'active' && (is_null($this->ends_at) || $this->ends_at->isFuture());
@@ -76,16 +88,24 @@ class Subscription extends Model
         return $this->stripe_status === 'cancelled' || ($this->ends_at && $this->ends_at->isPast());
     }
 
-    public function scopeActive($query)
-    {
-        return $query->where('stripe_status', 'active')->where(function ($q) {
-            $q->whereNull('ends_at')->orWhere('ends_at', '>', now());
-        });
-    }
-
     public function scopeTrialing($query)
     {
         return $query->where('stripe_status', 'trialing')->where('trial_ends_at', '>', now());
+    }
+
+    public function school()
+    {
+        return $this->belongsTo(School::class);
+    }
+
+    public function scopeActive($query)
+    {
+        return $query->where('status', 'active')->whereDate('ends_at', '>=', now());
+    }
+
+    public function isExpired(): bool
+    {
+        return $this->ends_at->lt(now());
     }
 
 }

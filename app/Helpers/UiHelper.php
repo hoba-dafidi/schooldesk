@@ -32,3 +32,22 @@ if (!function_exists('getPriorityColor')) {
         };
     }
 }
+
+if (!function_exists('isActiveMenu')) {
+    function isActiveMenu($menuSlug): string
+    {
+        $currentRoute = \Illuminate\Support\Facades\Route::currentRouteName();
+// dd($currentRoute);
+        if (is_array($menuSlug)) {
+            foreach ($menuSlug as $slug) {
+                if (str_starts_with($currentRoute, $slug)) {
+                    return 'active open';
+                }
+            }
+        } elseif (str_starts_with($currentRoute, $menuSlug)) {
+            return 'active open';
+        }
+
+        return '';
+    }
+}

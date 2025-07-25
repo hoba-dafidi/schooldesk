@@ -1,4 +1,4 @@
-@extends('layouts/app')
+@extends('layouts/contentNavbarLayout')
 
 @section('title', 'Ticket: ' . $ticket->subject)
 
@@ -46,7 +46,8 @@
                             <div class="mt-2">
                                 <button class="btn btn-sm btn-outline-secondary edit-btn"
                                     data-id="{{ $msg->id }}">Edit</button>
-                                <form method="POST" action="{{ route('tickets.deleteMessage', $msg) }}" class="d-inline">
+                                <form method="POST" action="{{ route('user.tickets.deleteMessage', $msg) }}"
+                                    class="d-inline">
                                     @csrf @method('DELETE')
                                     <button class="btn btn-sm btn-outline-danger"
                                         onclick="return confirm('Delete this message?')">Delete</button>
@@ -63,7 +64,7 @@
         <div class="card">
             <div class="card-header fw-bold">Reply</div>
             <div class="card-body">
-                <form id="replyForm" action="{{ route('tickets.reply', $ticket) }}" method="POST"
+                <form id="replyForm" action="{{ route('user.tickets.reply', $ticket) }}" method="POST"
                     enctype="multipart/form-data">
                     @csrf
 
@@ -91,19 +92,17 @@
 @endsection
 
 @push('scripts')
-    @push('scripts')
-        <script>
-            document.addEventListener("DOMContentLoaded", function() {
-                if (window.Echo) {
-                    window.Echo.private(`ticket-{{ $ticket->id }}`)
-                        .listen('.message.created', (e) => {
-                            const container = document.getElementById('messages');
-                            container.insertAdjacentHTML('beforeend', e.view);
-                        });
-                } else {
-                    console.warn("Echo is not available.");
-                }
-            });
-        </script>
-    @endpush
+    <script>
+        // document.addEventListener("DOMContentLoaded", function() {
+        //     if (window.Echo) {
+        //         window.Echo.private(`ticket-{{ $ticket->id }}`)
+        //             .listen('.message.created', (e) => {
+        //                 const container = document.getElementById('messages');
+        //                 container.insertAdjacentHTML('beforeend', e.view);
+        //             });
+        //     } else {
+        //         console.warn("Echo is not available.");
+        //     }
+        // });
+    </script>
 @endpush

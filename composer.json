@@ -13,7 +13,9 @@
     "laravel/framework": "^12.1",
     "laravel/sanctum": "^4.1",
     "laravel/tinker": "^2.9",
-    "spatie/laravel-permission": "^6.20"
+    "spatie/laravel-activitylog": "^4.10",
+    "spatie/laravel-permission": "^6.20",
+    "yabacon/paystack-php": "^2.2"
   },
   "require-dev": {
     "fakerphp/faker": "^1.23",
@@ -37,7 +39,8 @@
       "app/Helpers/DateHelper.php",
       "app/Helpers/AuthHelper.php",
       "app/Helpers/ValidationHelper.php",
-      "app/Helpers/FileHelper.php"
+      "app/Helpers/FileHelper.php",
+      "app/Helpers/SettingsHelper.php"
     ]
   },
   "autoload-dev": {

@@ -18,6 +18,21 @@ class DatabaseSeeder extends Seeder
 
     Role::firstOrCreate(['name' => 'user', 'guard_name' => 'web']);
     Role::firstOrCreate(['name' => 'admin', 'guard_name' => 'web']);
+    Role::firstOrCreate(['name' => 'support', 'guard_name' => 'web']);
+    Role::firstOrCreate(['name' => 'sales', 'guard_name' => 'web']);
+    Role::firstOrCreate(['name' => 'developer', 'guard_name' => 'web']);
+
+     $this->call(SpecificUsersSeeder::class);
+    $this->call(AdminRoleSeeder::class);
+    $this->call(SchoolSeeder::class);
+    $this->call(SettingSeeder::class);
+    $this->call([
+        PlanSeeder::class,
+    ]);
+
+    $this->call([
+        PaymentGatewaySeeder::class,
+    ]);
 
     // User::factory()->create([
     //   'name' => 'Test User',

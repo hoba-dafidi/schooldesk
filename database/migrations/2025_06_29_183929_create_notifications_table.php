@@ -12,15 +12,15 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('notifications', function (Blueprint $table) {
-            $table->id();
-            $table->foreignId('user_id')->constrained()->onDelete('cascade');
-            $table->string('type'); // e.g., 'system_alert', 'billing_update', 'ticket_reply'
-            $table->string('title')->nullable(); // Short title for the notification
-            $table->text('message'); // Full notification message
-            $table->json('data')->nullable(); // Optional: related data (e.g., school_id, invoice_id)
+            $table->uuid('id')->primary(); // Laravel uses UUIDs for notifications
+            $table->morphs('notifiable'); // Creates notifiable_type + notifiable_id
+            $table->string('type'); // Notification class path
+            $table->string('title')->nullable(); // Optional short title
+            $table->json('data')->nullable(); // Optional: related payload (e.g. invoice_id)
             $table->timestamp('read_at')->nullable();
             $table->timestamps();
         });
+
     }
 
     /**

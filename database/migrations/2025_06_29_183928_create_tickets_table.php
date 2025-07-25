@@ -17,7 +17,7 @@ return new class extends Migration
             $table->foreignId('school_id')->nullable()->constrained()->onDelete('set null');
             $table->string('subject');
             $table->text('description');
-            $table->enum('status', ['open', 'in_progress', 'closed', 'awaiting_reply'])->default('open');
+            $table->enum('status', ['open', 'in_progress', 'closed', 'awaiting_reply', 'escalated', 'resolved'])->default('open');
             $table->enum('priority', ['low', 'medium', 'high', 'urgent'])->default('medium');
             $table->string('category')->nullable();
             $table->string('source')->nullable(); // web, email, api, etc.

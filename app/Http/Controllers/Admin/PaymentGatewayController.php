@@ -37,21 +37,27 @@ class PaymentGatewayController extends Controller
 
     public function update(Request $request, PaymentGateway $gateway)
     {
-        $validated = $request->validate([
-            'name' => 'required|string|max:255',
-            'slug' => 'required|string|max:255|unique:payment_gateways,slug,' . $gateway->id,
-            'currency' => 'nullable|string|max:10',
-            'driver_class' => 'nullable|string|max:255',
-            'callback_url' => 'nullable|url',
-            'webhook_url' => 'nullable|url',
-            'is_active' => 'nullable|boolean',
-            'sandbox_mode' => 'nullable|boolean',
-        ]);
+      $validated = $request->validate([
+          'name' => 'required|string|max:255',
+          'slug' => 'required|string|max:255|unique:payment_gateways,slug,' . $gateway->id,
+          'currency' => 'nullable|string|max:10',
+          'driver_class' => 'nullable|string|max:255',
+          'callback_url' => 'nullable|url',
+          'webhook_url' => 'nullable|url',
+          'api_key' => 'nullable|string|max:255',
+          'api_secret' => 'nullable|string|max:255',
+          'merchant_id' => 'nullable|string|max:255',
+          'webhook_secret' => 'nullable|string|max:255',
+          'encryption_key' => 'nullable|string|max:255',
+      ]);
 
-        $validated['is_active'] = $request->has('is_active');
-        $validated['sandbox_mode'] = $request->has('sandbox_mode');
+      // Cast checkboxes properly
+      $validated['is_active'] = $request->has('is_active');
+      $validated['sandbox_mode'] = $request->has('sandbox_mode');
 
-        $gateway->update($validated);
+      // Update the gateway
+      $gateway->update($validated);
+
 
         return redirect()->route('admin.gateways.index')->with('success', 'Gateway updated successfully.');
     }

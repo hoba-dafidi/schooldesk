@@ -7,11 +7,13 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Laravel\Sanctum\HasApiTokens;
+use Spatie\Activitylog\LogOptions;
+use Spatie\Activitylog\Traits\LogsActivity;
 use Spatie\Permission\Traits\HasRoles;
 
 class User extends Authenticatable implements MustVerifyEmail
 {
-    use HasApiTokens, HasFactory, Notifiable, HasRoles; // Added Billable trait
+    use HasApiTokens, HasFactory, Notifiable, HasRoles, LogsActivity; // Added Billable trait
 
     /**
      * The attributes that are mass assignable.
@@ -111,13 +113,18 @@ class User extends Authenticatable implements MustVerifyEmail
         return $this->hasMany(Ticket::class);
     }
 
-    /**
-     * Get the notifications for the user (client).
-     */
-    public function notifications()
+    public function customDomains()
     {
-        return $this->hasMany(Notification::class);
+        return $this->hasManyThrough(
+            \App\Models\CustomDomain::class,
+            \App\Models\School::class,
+            'user_id',      // Foreign key on schools table
+            'school_id',    // Foreign key on custom_domains table
+            'id',           // Local key on users table
+            'id'            // Local key on schools table
+        );
     }
+
 
     /**
      * Get the tenant that owns the user.
@@ -126,6 +133,25 @@ class User extends Authenticatable implements MustVerifyEmail
     {
         return $this->belongsTo(Tenant::class); // Assuming you'll create a Tenant model
     }
+
+    public function assignedTickets()
+    {
+        return $this->hasMany(Ticket::class, 'assigned_to');
+    }
+
+    public function getNameAttribute()
+    {
+        return "{$this->firstname} {$this->lastname}";
+    }
+
+     public function getActivitylogOptions(): LogOptions
+    {
+        return LogOptions::defaults()
+            ->logOnly(['name', 'email']) // or leave empty to log all changes
+            ->logOnlyDirty()
+            ->dontSubmitEmptyLogs();
+    }
+
 
     /**
      * Check if the user is an administrator.
@@ -136,6 +162,12 @@ class User extends Authenticatable implements MustVerifyEmail
     {
         return (bool) $this->is_admin;
     }
+
+    public function getAvatarUrlAttribute()
+    {
+        return $this->avatar ? asset('storage/' . $this->avatar) : asset('assets/img/avatars/default.png');
+    }
+
 }
 
 // $user->assignRole('admin');

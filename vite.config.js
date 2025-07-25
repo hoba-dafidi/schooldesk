@@ -60,5 +60,8 @@ export default defineConfig({
     hmr: {
       host: 'schoolmanager.test'
     }
+  },
+  define: {
+    'process.env': {}
   }
 });

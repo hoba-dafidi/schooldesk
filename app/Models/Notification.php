@@ -2,17 +2,25 @@
 
 namespace App\Models;
 
+use Illuminate\Broadcasting\PrivateChannel;
+use Illuminate\Contracts\Broadcasting\ShouldBroadcast;
+use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Notifications\Events\BroadcastNotificationCreated;
+use Illuminate\Support\Facades\Broadcast;
 
-class Notification extends Model
+class Notification extends Model implements ShouldBroadcast, ShouldQueue
 {
     use HasFactory;
 
+    public const TYPE_SYSTEM = 'system';
+    public const TYPE_BILLING = 'billing';
+    public const TYPE_SUPPORT = 'support';
+
     protected $fillable = [
-        'user_id',
-        'type', // e.g., 'system', 'billing', 'support'
-        'data', // JSON field for specific notification data (e.g., {'school_name': 'Acme', 'status': 'active'})
+        'type',
+        'data',
         'read_at',
     ];
 
@@ -21,11 +29,36 @@ class Notification extends Model
         'read_at' => 'datetime',
     ];
 
-    /**
-     * Get the user that the notification belongs to.
-     */
-    public function user()
+    // 🔁 Polymorphic relationship
+    public function notifiable()
     {
-        return $this->belongsTo(User::class);
+        return $this->morphTo();
+    }
+
+    // ✅ Scope for unread
+    public function scopeUnread($query)
+    {
+        return $query->whereNull('read_at');
+    }
+
+    // ✅ Mark as read
+    public function markAsRead()
+    {
+        $this->update(['read_at' => now()]);
+    }
+
+     public function broadcastOn()
+    {
+        return new PrivateChannel('notifications.' . $this->notifiable_id);
+    }
+
+    public function broadcastWith()
+    {
+        return [
+            'id' => $this->id,
+            'type' => $this->type,
+            'data' => $this->data,
+            'read_at' => $this->read_at,
+        ];
     }
 }

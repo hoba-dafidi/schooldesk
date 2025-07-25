@@ -5,7 +5,7 @@ namespace App\Providers;
 use Illuminate\Support\Facades\View;
 use Illuminate\Routing\Route;
 
-use Illuminate\Support\ServiceProvider;
+use Illuminate\Foundation\Support\Providers\EventServiceProvider as ServiceProvider;
 
 class MenuServiceProvider extends ServiceProvider
 {

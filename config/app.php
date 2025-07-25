@@ -41,6 +41,9 @@ return [
 
   'debug' => (bool) env('APP_DEBUG', false),
 
+  'support_email' => env('APP_SUPPORT_EMAIL', 'support@loftytreeapps.com'),
+
+
   /*
   |--------------------------------------------------------------------------
   | Application URL

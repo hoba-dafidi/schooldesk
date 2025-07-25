@@ -53,20 +53,25 @@ class TicketController extends Controller
             'status' => TicketStatus::Open,
         ]);
 
-        return redirect()->route('tickets.show', $ticket)->with('success', 'Ticket submitted successfully.');
+        activity()
+              ->causedBy(Auth::user())
+              ->performedOn($ticket)
+              ->withProperties(['plan' => $ticket->subject])
+              ->log('Ticket Created');
+
+        return redirect()->route('user.tickets.show', $ticket)->with('success', 'Ticket submitted successfully.');
     }
 
     /**
      * Show the ticket detail and conversation thread.
      */
-    public function show(Ticket $ticket)
+    public function show($id)
     {
-        $this->authorize('view', $ticket);
-
-        $ticket->load(['messages.user', 'messages.attachments']);
+        $ticket = Ticket::with(['messages.attachments', 'messages.user'])->findOrFail($id);
 
         return view('user.tickets.show', compact('ticket'));
     }
+
 
     /**
      * Post a reply from the user.
@@ -81,7 +86,7 @@ class TicketController extends Controller
         ]);
 
         $message = $ticket->messages()->create([
-            'user_id' => auth()->id(),
+            'user_id' => Auth::id(),
             'content' => $validated['message'],
         ]);
 
@@ -96,6 +101,12 @@ class TicketController extends Controller
         }
 
         $ticket->update(['status' => TicketStatus::InProgress]);
+
+        activity()
+              ->causedBy(Auth::user())
+              ->performedOn($ticket)
+              ->withProperties(['plan' => $ticket->subject])
+              ->log('Replied to Ticket');
 
         $html = View::make('partials.ticket-message', ['msg' => $message])->render();
         event(new TicketMessageCreated($message, $html));

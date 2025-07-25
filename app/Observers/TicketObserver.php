@@ -4,6 +4,7 @@ namespace App\Observers;
 
 use App\Models\Ticket;
 use Illuminate\Support\Facades\Auth;
+use Spatie\Activitylog\Models\Activity; // Optional if needed
 
 class TicketObserver
 {

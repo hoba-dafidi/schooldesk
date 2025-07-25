@@ -38,28 +38,29 @@
 
 <div class="navbar-nav-right d-flex align-items-center" id="navbar-collapse">
     <!-- Search -->
-    <div class="navbar-nav align-items-center">
+    {{-- <div class="navbar-nav align-items-center">
         <div class="nav-item d-flex align-items-center">
             <i class="bx bx-search bx-md"></i>
             <input type="text" class="form-control border-0 shadow-none ps-1 ps-sm-2" placeholder="Search..."
                 aria-label="Search...">
         </div>
-    </div>
+    </div> --}}
     <!-- /Search -->
     <ul class="navbar-nav flex-row align-items-center ms-auto">
 
         <!-- Place this tag where you want the button to render. -->
-        <li class="nav-item lh-1 me-4">
+        {{-- <li class="nav-item lh-1 me-4">
             <a class="github-button" href="{{ config('variables.repository') }}" data-icon="octicon-star"
                 data-size="large" data-show-count="true"
                 aria-label="Star themeselection/sneat-html-laravel-admin-template-free on GitHub">Star</a>
-        </li>
+        </li> --}}
 
         <!-- User -->
         <li class="nav-item navbar-dropdown dropdown-user dropdown">
             <a class="nav-link dropdown-toggle hide-arrow p-0" href="javascript:void(0);" data-bs-toggle="dropdown">
                 <div class="avatar avatar-online">
-                    <img src="{{ asset('assets/img/avatars/1.png') }}" alt class="w-px-40 h-auto rounded-circle">
+                    <img src="{{ Auth::user()->avatar ? asset('storage/' . Auth::user()->avatar) : asset('assets/img/avatars/default.png') }}"
+                        alt class="w-px-40 h-auto rounded-circle">
                 </div>
             </a>
             <ul class="dropdown-menu dropdown-menu-end">
@@ -85,11 +86,13 @@
                     <div class="dropdown-divider my-1"></div>
                 </li>
                 <li>
-                    <a class="dropdown-item" href="{{ route('user.profile') }}">
+                    <a class="dropdown-item"
+                        href="{{ Auth::user()->hasRole('user') ? route('user.profile') : route('admin.profile') }}">
                         <i class="bx bx-user bx-md me-3"></i><span>My Profile</span>
                     </a>
+
                 </li>
-                <li>
+                {{-- <li>
                     <a class="dropdown-item" href="javascript:void(0);">
                         <i class="bx bx-cog bx-md me-3"></i><span>Settings</span>
                     </a>
@@ -102,7 +105,7 @@
                             <span class="flex-shrink-0 badge rounded-pill bg-danger">4</span>
                         </span>
                     </a>
-                </li>
+                </li> --}}
                 <li>
                     <div class="dropdown-divider my-1"></div>
                 </li>

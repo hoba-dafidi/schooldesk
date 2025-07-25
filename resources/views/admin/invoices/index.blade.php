@@ -8,10 +8,12 @@
 
         @if (session('success'))
             <div class="alert alert-success alert-dismissible fade show" role="alert">
+                <i class="bx bx-check-circle me-2"></i>
                 {{ session('success') }}
-                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
             </div>
         @endif
+
 
         {{-- Filter Form --}}
         <form method="GET" class="row align-items-end g-3 mb-4">

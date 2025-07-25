@@ -46,7 +46,13 @@ class DomainController extends Controller
             abort(403);
         }
 
-        Subdomain::create($validated);
+        $subdomain = Subdomain::create($validated);
+
+        activity()
+              ->causedBy(Auth::user())
+              ->performedOn($subdomain)
+              ->withProperties(['plan' => $subdomain->link])
+              ->log('Subdomain Created');
 
         return redirect()->route('user.subdomains.index')->with('success', 'Subdomain created successfully.');
     }
@@ -73,6 +79,12 @@ class DomainController extends Controller
 
         $subdomain->update($validated);
 
+        activity()
+              ->causedBy(Auth::user())
+              ->performedOn($subdomain)
+              ->withProperties(['plan' => $subdomain->link])
+              ->log('Subdomain Updated');
+
         return redirect()->route('user.subdomains.index')->with('success', 'Subdomain updated successfully.');
     }
 
@@ -80,6 +92,12 @@ class DomainController extends Controller
     {
         $this->authorizeAccess($subdomain);
         $subdomain->delete();
+
+        activity()
+              ->causedBy(Auth::user())
+              ->performedOn($subdomain)
+              ->withProperties(['plan' => $subdomain->link])
+              ->log('Subdomain Deleted');
         return redirect()->route('user.subdomains.index')->with('success', 'Subdomain deleted.');
     }
 

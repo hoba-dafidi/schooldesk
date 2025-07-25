@@ -8,6 +8,8 @@ enum TicketStatus: string
     case InProgress = 'in_progress';
     case AwaitingReply = 'awaiting_reply';
     case Closed = 'closed';
+    case Escalated = 'escalated';
+    case Resolved = 'resolved';
 
     public function label(): string
     {
@@ -16,6 +18,8 @@ enum TicketStatus: string
             self::InProgress => 'In Progress',
             self::AwaitingReply => 'Awaiting Reply',
             self::Closed => 'Closed',
+            self::Escalated => 'Escalated',
+            self::Resolved => 'Resolved',
         };
     }
 

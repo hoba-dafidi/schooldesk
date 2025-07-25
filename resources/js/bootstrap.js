@@ -1,10 +1,20 @@
 import axios from 'axios';
 import Echo from 'laravel-echo';
 import Pusher from 'pusher-js';
+import $ from 'jquery';
+import 'datatables.net-bs5';
+import 'datatables.net-bs5/css/dataTables.bootstrap5.min.css';
+import Toastify from 'toastify-js';
+import 'toastify-js/src/toastify.css';
+
+window.$ = window.jQuery = $;
 
 window.axios = axios;
 
 window.axios.defaults.headers.common['X-Requested-With'] = 'XMLHttpRequest';
+
+// Make Toastify available globally
+window.Toastify = Toastify;
 
 // Make Pusher available globally
 window.Pusher = Pusher;

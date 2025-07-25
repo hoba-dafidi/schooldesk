@@ -7,6 +7,7 @@ use App\Models\Invoice;
 use App\Notifications\InvoiceNotification;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Mail;
 use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class InvoiceController extends Controller
@@ -129,6 +130,27 @@ class InvoiceController extends Controller
         $pdf = PDF::loadView('admin.invoices.pdf', compact('invoice'));
         return $pdf->download("Invoice-{$invoice->invoice_number}.pdf");
     }
+
+    public function downloadPdf(Invoice $invoice)
+    {
+        $pdf = PDF::loadView('admin.invoices.pdf', compact('invoice'));
+        return $pdf->download("invoice-{$invoice->invoice_number}.pdf");
+    }
+
+    public function email($id)
+    {
+        $invoice = Invoice::with('user', 'items')->findOrFail($id);
+
+        if (!$invoice->user || !$invoice->user->email) {
+            return back()->with('error', 'No valid user or email address found.');
+        }
+
+        Mail::to($invoice->user->email)->queue(new \App\Mail\InvoiceMailable($invoice));
+
+        return back()->with('success', 'Invoice emailed successfully to ' . $invoice->user->email);
+    }
+
+
 
     public function resend(Invoice $invoice)
     {
