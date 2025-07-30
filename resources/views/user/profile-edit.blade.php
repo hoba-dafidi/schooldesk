@@ -24,6 +24,12 @@
                         </div>
 
                         <div class="col-md-6 mb-4">
+                            <label class="form-label">Middle Name</label>
+                            <input type="text" name="middlename" class="form-control"
+                                value="{{ old('middlename', $user->middlename) }}">
+                        </div>
+
+                        <div class="col-md-6 mb-4">
                             <label class="form-label">Last Name</label>
                             <input type="text" name="lastname" class="form-control"
                                 value="{{ old('lastname', $user->lastname) }}" required>

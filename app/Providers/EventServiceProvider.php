@@ -2,9 +2,11 @@
 
 namespace App\Providers;
 
-use Illuminate\Foundation\Support\Providers\EventServiceProvider as ServiceProvider;
+use App\Events\SubscriptionActivated;
 use App\Events\SubscriptionChanged;
+use App\Listeners\SendSubscriptionActivatedNotification;
 use App\Listeners\SendSubscriptionChangeNotification;
+use Illuminate\Foundation\Support\Providers\EventServiceProvider as ServiceProvider;
 
 class EventServiceProvider extends ServiceProvider
 {
@@ -14,6 +16,9 @@ class EventServiceProvider extends ServiceProvider
     protected $listen = [
         SubscriptionChanged::class => [
             SendSubscriptionChangeNotification::class,
+        ],
+        SubscriptionActivated::class => [
+            SendSubscriptionActivatedNotification::class,
         ],
     ];
 }

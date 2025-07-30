@@ -23,7 +23,7 @@
                             <th>Logo</th>
                             <th>Name</th>
                             <th>Status</th>
-                            <th>Plan</th>
+                            <th>Type</th>
                             <th>Actions</th>
                         </tr>
                     </thead>
@@ -47,8 +47,8 @@
                                     </span>
                                 </td>
                                 <td>
-                                    <span class="badge bg-label-{{ $school->is_paid_plan ? 'primary' : 'secondary' }}">
-                                        {{ $school->is_paid_plan ? 'Paid' : 'Free' }}
+                                    <span class="badge bg-label-secondary">
+                                        {{ $school->type }}
                                     </span>
                                 </td>
                                 <td>

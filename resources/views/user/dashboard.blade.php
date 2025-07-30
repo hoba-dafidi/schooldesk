@@ -86,3 +86,12 @@
         </div>
     </div>
 @endsection
+
+@push('styles')
+    <style>
+        .hover-bg-light:hover {
+            background-color: #f8f9fa;
+            cursor: pointer;
+        }
+    </style>
+@endpush

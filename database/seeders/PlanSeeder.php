@@ -23,7 +23,7 @@ class PlanSeeder extends Seeder
             [
                 'name' => 'Pro',
                 'slug' => 'pro',
-                'price' => 29.99,
+                'price' => 2999.99,
                 'currency' => 'NGN',
                 'description' => 'Professional plan with more features',
                 'features' => ['5 Users', 'Priority Support', 'Custom Reports'],
@@ -33,7 +33,7 @@ class PlanSeeder extends Seeder
             [
                 'name' => 'Enterprise',
                 'slug' => 'enterprise',
-                'price' => 99.99,
+                'price' => 9999.99,
                 'currency' => 'NGN',
                 'description' => 'Enterprise-level plan for organizations',
                 'features' => ['Unlimited Users', '24/7 Support', 'Custom Integrations'],

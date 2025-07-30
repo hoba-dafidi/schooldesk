@@ -24,6 +24,7 @@
 
                             <form action="{{ route('register') }}" method="POST">
                                 @csrf
+                                <input type="hidden" name="ref" value="{{ request()->get('ref') }}">
                                 <div class="mb-4">
                                     <label class="form-label">First Name</label>
                                     <input type="text" name="firstname" class="form-control"

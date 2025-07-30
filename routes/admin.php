@@ -1,10 +1,14 @@
 <?php
 
+use App\Http\Controllers\Admin\AdminAffiliateController;
+use App\Http\Controllers\Admin\AdminCampaignController;
+use App\Http\Controllers\Admin\AdminCommissionController;
 use App\Http\Controllers\Admin\AdminNotificationController;
 use App\Http\Controllers\Admin\AdminProfileController;
 use App\Http\Controllers\Admin\DashboardController;
 use App\Http\Controllers\Admin\DomainController;
 use App\Http\Controllers\Admin\InvoiceController;
+use App\Http\Controllers\Admin\ManualPaymentController;
 use App\Http\Controllers\Admin\PaymentGatewayController;
 use App\Http\Controllers\Admin\PlanController;
 use App\Http\Controllers\Admin\SchoolController;
@@ -12,9 +16,15 @@ use App\Http\Controllers\Admin\SubscriptionAuditController;
 use App\Http\Controllers\Admin\SubscriptionController;
 use App\Http\Controllers\Admin\SystemSettingController;
 use App\Http\Controllers\Admin\TicketController;
+use App\Http\Controllers\AffiliatePayoutController;
 use App\Http\Controllers\CouponController;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
+
+
+
+
+
 
 
 
@@ -114,5 +124,37 @@ Route::middleware(['auth', 'role:admin'])->prefix('admin')->name('admin.')->grou
     Route::get('/profile', [AdminProfileController::class, 'edit'])->name('profile');
     Route::put('/profile', [AdminProfileController::class, 'update'])->name('profile.update');
     Route::put('/profile/password', [AdminProfileController::class, 'updatePassword'])->name('profile.password');
+
+    Route::get('/manual-payments', [ManualPaymentController::class, 'index'])->name('manual-payments.index');
+    Route::patch('/manual-payments/{manualPayment}', [ManualPaymentController::class, 'update'])->name('manual-payments.update');
+    Route::post('/manual-payments/{manualPayment}/review', [ManualPaymentController::class, 'review'])
+    ->name('manual-payments.review');
+
+    Route::get('/affiliates', [AdminCommissionController::class, 'index'])->name('affiliates');
+
+    Route::prefix('commissions')->name('commissions.')->group(function () {
+        Route::get('/', [AdminCommissionController::class, 'index'])->name('index');
+        Route::get('/data', [AdminCommissionController::class, 'data'])->name('data');
+        Route::post('/{commission}/approve', [AdminCommissionController::class, 'approve'])->name('approve');
+        Route::post('/{commission}/mark-paid', [AdminCommissionController::class, 'markAsPaid'])->name('markAsPaid');
+        Route::get('/export', [AdminCommissionController::class, 'export'])->name('export');
+        Route::get('/performance', [AdminCommissionController::class, 'performance'])->name('performance');
+    });
+
+    Route::prefix('affiliates')->name('affiliates.')->group(function () {
+        Route::get('/', [AdminAffiliateController::class, 'index'])->name('index');
+        Route::get('/export', [AdminAffiliateController::class, 'export'])->name('export');
+    });
+
+    Route::get('campaigns', [AdminCampaignController::class, 'index'])->name('campaigns.index');
+    Route::get('campaigns/data', [AdminCampaignController::class, 'data'])->name('campaigns.data');
+    Route::delete('campaigns/{campaign}', [AdminCampaignController::class, 'destroy'])->name('campaigns.destroy');
+    Route::get('campaigns/export/{type}', [AdminCampaignController::class, 'export'])->name('campaigns.export');
+
+    Route::get('/admin/payouts', [AffiliatePayoutController::class, 'adminIndex'])
+        ->name('admin.payouts.index');
+    Route::patch('/admin/payouts/{payout}', [AffiliatePayoutController::class, 'updateStatus'])
+        ->name('admin.payouts.update');
+
 
 });

@@ -53,5 +53,27 @@ class PaymentGatewaySeeder extends Seeder
                 'api_version' => 'v3',
             ],
         ]);
+
+        // Manual Payment (No API keys needed)
+        PaymentGateway::create([
+            'name' => 'Manual Payment',
+            'slug' => 'manual',
+            'is_active' => true, // or false if only admin can enable it
+            'description' => 'Manual Bank Transfer or Cash Payments. Requires manual verification.',
+            'driver_class' => null,
+            'api_key' => null,
+            'api_secret' => null,
+            'webhook_secret' => null,
+            'merchant_id' => null,
+            'currency' => 'NGN',
+            'sandbox_mode' => false,
+            'logo_url' => 'https://cdn-icons-png.flaticon.com/512/483/483947.png', // You can use your custom image
+            'config' => [
+                'requires_proof' => true,
+                'proof_upload' => true,
+                'instructions' => 'Transfer to GTBank 0123456789 and upload payment proof',
+            ],
+        ]);
+
     }
 }

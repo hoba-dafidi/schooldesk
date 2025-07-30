@@ -75,6 +75,12 @@ class Invoice extends Model
         return $this->belongsTo(PaymentGateway::class);
     }
 
+    public function manualPayment()
+    {
+        return $this->hasOne(ManualPayment::class);
+    }
+
+
     /*
     |--------------------------------------------------------------------------
     | Accessors

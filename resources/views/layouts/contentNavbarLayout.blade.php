@@ -38,6 +38,7 @@
                 <!-- Content wrapper -->
                 <div class="content-wrapper">
 
+                    <x-flash-messages />
                     <!-- Content -->
                     @if ($isFlex)
                         <div class="{{ $container }} d-flex align-items-stretch flex-grow-1 p-0">

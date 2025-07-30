@@ -10,24 +10,24 @@ class NotificationController extends Controller
 {
     public function index()
     {
-        $notifications = Notification::where('notifiable_type', get_class(Auth::user()))
-            ->where('notifiable_id', Auth::id())
+        $notifications = Auth::user()
+            ->notifications()
             ->latest()
-            ->paginate(10);
+            ->paginate(10); // Or ->get() if you don't want pagination
 
         return view('user.notifications.index', compact('notifications'));
     }
 
     public function markAsRead($id)
     {
-        $notification = Notification::where('id', $id)
-            ->where('notifiable_type', get_class(Auth::user()))
-            ->where('notifiable_id', Auth::id())
+        $notification = Auth::user()
+            ->notifications()
+            ->where('id', $id)
             ->firstOrFail();
 
         $notification->markAsRead();
 
-        return back()->with('success', 'Notification marked as read.');
+        return response()->json(['message' => 'Notification marked as read.']);
     }
 
     public function markAllAsRead()

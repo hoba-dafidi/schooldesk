@@ -4,6 +4,7 @@ namespace Database\Seeders;
 
 use Illuminate\Database\Seeder;
 use App\Models\User;
+use App\Models\Affiliate; // Add this
 use Illuminate\Support\Facades\Hash;
 use Spatie\Permission\Models\Role;
 
@@ -36,5 +37,16 @@ class SpecificUsersSeeder extends Seeder
             ]
         );
         $admin->syncRoles([$adminRole]);
+
+        // ✅ Create Affiliate record for each user if not exists
+        Affiliate::updateOrCreate(
+            ['user_id' => $user->id],
+            ['referral_code' => strtoupper(uniqid('REF'))]
+        );
+
+        Affiliate::updateOrCreate(
+            ['user_id' => $admin->id],
+            ['referral_code' => strtoupper(uniqid('REF'))]
+        );
     }
 }

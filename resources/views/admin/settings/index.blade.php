@@ -3,231 +3,242 @@
 @section('title', 'System Settings')
 
 @section('content')
-    <div class="container-xxl flex-grow-1 container-p-y">
+    <div class="container-xxl">
         <h4 class="fw-bold mb-4">System Settings</h4>
 
         @if (session('success'))
             <div class="alert alert-success">{{ session('success') }}</div>
         @endif
 
-        <form method="POST" action="{{ route('admin.settings.update') }}" enctype="multipart/form-data">
+        <ul class="nav nav-tabs mb-4" id="settingsTabs" role="tablist">
+            <li class="nav-item"><a class="nav-link active" data-bs-toggle="tab" href="#branding">Branding</a></li>
+            <li class="nav-item"><a class="nav-link" data-bs-toggle="tab" href="#contact">Contact</a></li>
+            <li class="nav-item"><a class="nav-link" data-bs-toggle="tab" href="#email">Email</a></li>
+            <li class="nav-item"><a class="nav-link" data-bs-toggle="tab" href="#invoice">Invoice</a></li>
+            <li class="nav-item"><a class="nav-link" data-bs-toggle="tab" href="#affiliate">Affiliate</a></li>
+            <li class="nav-item"><a class="nav-link" data-bs-toggle="tab" href="#other">Other</a></li>
+        </ul>
+
+        <form action="{{ route('admin.settings.update') }}" method="POST" enctype="multipart/form-data">
             @csrf
 
-            <div class="accordion" id="settingsAccordion">
+            <div class="tab-content card p-3">
+                {{-- Branding --}}
+                <div class="tab-pane fade show active" id="branding">
+                    <div class="row g-4">
+                        @foreach ([
+            'app_logo_url' => 'App Logo',
+            'favicon_url' => 'Favicon',
+            'background_url' => 'Background',
+            'watermark_url' => 'Watermark',
+        ] as $key => $label)
+                            <div class="col-md-6">
+                                <label class="form-label">{{ $label }}</label><br>
+                                @if (!empty($settings[$key]))
+                                    <div class="mb-2">
+                                        <img src="{{ asset('storage/' . $settings[$key]) }}" alt="{{ $label }}"
+                                            class="img-thumbnail" width="100">
+                                    </div>
+                                    <div class="form-check mb-2">
+                                        <input class="form-check-input" type="checkbox" name="remove_{{ $key }}"
+                                            id="remove_{{ $key }}">
+                                        <label class="form-check-label" for="remove_{{ $key }}">Remove</label>
+                                    </div>
+                                @endif
+                                <input type="file" name="{{ str_replace('_url', '_file', $key) }}" class="form-control">
+                            </div>
+                        @endforeach
+                    </div>
+                </div>
 
-                {{-- GENERAL SETTINGS --}}
-                <div class="accordion-item">
-                    <h2 class="accordion-header" id="generalSettingsHeader">
-                        <button class="accordion-button" type="button" data-bs-toggle="collapse"
-                            data-bs-target="#generalSettings">
-                            General Settings
-                        </button>
-                    </h2>
-                    <div id="generalSettings" class="accordion-collapse collapse show" data-bs-parent="#settingsAccordion">
-                        <div class="accordion-body row g-3">
-                            <div class="col-md-6">
-                                <label class="form-label">App Name</label>
-                                <input type="text" name="app_name" class="form-control"
-                                    value="{{ $settings['app_name'] ?? '' }}">
-                            </div>
-                            <div class="col-md-6">
-                                <label class="form-label">Default Currency</label>
-                                <input type="text" name="default_currency" class="form-control"
-                                    value="{{ $settings['default_currency'] ?? 'NGN' }}">
-                            </div>
-                            <div class="col-md-6">
-                                <label class="form-label">Timezone</label>
-                                <input type="text" name="timezone" class="form-control"
-                                    value="{{ $settings['timezone'] ?? 'Africa/Lagos' }}">
-                            </div>
-                            <div class="col-md-6">
-                                <label class="form-label">Support Email</label>
-                                <input type="email" name="support_email" class="form-control"
-                                    value="{{ $settings['support_email'] ?? '' }}">
-                            </div>
+                {{-- Contact --}}
+                <div class="tab-pane fade" id="contact">
+                    <div class="row g-4">
+                        <div class="col-md-6">
+                            <label class="form-label">Support Email</label>
+                            <input type="email" name="support_email" class="form-control"
+                                value="{{ $settings['support_email'] ?? '' }}">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Company Name</label>
+                            <input type="text" name="company_name" class="form-control"
+                                value="{{ $settings['company_name'] ?? '' }}">
+                        </div>
+                        <div class="col-12">
+                            <label class="form-label">Company Address</label>
+                            <input type="text" name="company_address" class="form-control"
+                                value="{{ $settings['company_address'] ?? '' }}">
                         </div>
                     </div>
                 </div>
 
-                {{-- BRANDING SETTINGS --}}
-                <div class="accordion-item">
-                    <h2 class="accordion-header" id="brandingSettingsHeader">
-                        <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse"
-                            data-bs-target="#brandingSettings">
-                            Branding Settings
-                        </button>
-                    </h2>
-                    <div id="brandingSettings" class="accordion-collapse collapse" data-bs-parent="#settingsAccordion">
-                        <div class="accordion-body row g-3">
-
-                            {{-- Company Info --}}
-                            <div class="col-md-6">
-                                <label class="form-label">Company Name</label>
-                                <input type="text" name="company_name" class="form-control"
-                                    value="{{ $settings['company_name'] ?? '' }}">
-                            </div>
-                            <div class="col-md-6">
-                                <label class="form-label">Company Address</label>
-                                <input type="text" name="company_address" class="form-control"
-                                    value="{{ $settings['company_address'] ?? '' }}">
-                            </div>
-
-                            {{-- Homepage URL --}}
-                            <div class="col-md-6">
-                                <label class="form-label">Homepage URL</label>
-                                <input type="text" name="homepage_url" class="form-control"
-                                    value="{{ $settings['homepage_url'] ?? '' }}">
-                            </div>
-
-                            {{-- Homepage URL --}}
-                            <div class="col-md-6">
-                                {{-- <label class="form-label">Homepage URL</label>
-                                <input type="text" name="homepage_url" class="form-control"
-                                    value="{{ $settings['homepage_url'] ?? '' }}"> --}}
-                            </div>
-
-                            {{-- App Logo --}}
-                            <div class="col-md-6">
-                                <label class="form-label">App Logo</label>
-                                @if (!empty($settings['app_logo_url']))
-                                    <div class="mb-2 d-flex align-items-center gap-2">
-                                        <img src="{{ asset('storage/' . $settings['app_logo_url']) }}" alt="App Logo"
-                                            height="0" id="preview_app_logo">
-                                        <div class="form-check">
-                                            <input class="form-check-input" type="checkbox" name="remove_app_logo"
-                                                value="1" id="removeAppLogo">
-                                            <label class="form-check-label" for="removeAppLogo">Remove</label>
-                                        </div>
-                                    </div>
-                                @endif
-                                <input type="file" name="app_logo_file" class="form-control"
-                                    onchange="previewImage(this, 'preview_app_logo_new')">
-                                <small class="text-muted">Max 1MB. JPG/PNG only.</small>
-                                <img id="preview_app_logo_new" class="mt-2" style="max-height: 60px;" hidden>
-                            </div>
-
-                            {{-- Favicon --}}
-                            <div class="col-md-6">
-                                <label class="form-label">Favicon</label>
-                                @if (!empty($settings['favicon_url']))
-                                    <div class="mb-2 d-flex align-items-center gap-2">
-                                        <img src="{{ asset('storage/' . $settings['favicon_url']) }}" alt="Favicon"
-                                            height="60" id="preview_favicon">
-                                        <div class="form-check">
-                                            <input class="form-check-input" type="checkbox" name="remove_favicon"
-                                                value="1" id="removeFavicon">
-                                            <label class="form-check-label" for="removeFavicon">Remove</label>
-                                        </div>
-                                    </div>
-                                @endif
-                                <input type="file" name="favicon_file" class="form-control"
-                                    onchange="previewImage(this, 'preview_favicon_new')">
-                                <small class="text-muted">Max 256KB. ICO/PNG only.</small>
-                                <img id="preview_favicon_new" class="mt-2" style="max-height: 40px;" hidden>
-                            </div>
-
-                            {{-- Background Image --}}
-                            <div class="col-md-6">
-                                <label class="form-label">Login Background</label>
-                                @if (!empty($settings['background_url']))
-                                    <div class="mb-2 d-flex align-items-center gap-2">
-                                        <img src="{{ asset('storage/' . $settings['background_url']) }}" alt="Background"
-                                            height="60" id="preview_background">
-                                        <div class="form-check">
-                                            <input class="form-check-input" type="checkbox" name="remove_background"
-                                                value="1" id="removeBackground">
-                                            <label class="form-check-label" for="removeBackground">Remove</label>
-                                        </div>
-                                    </div>
-                                @endif
-                                <input type="file" name="background_file" class="form-control"
-                                    onchange="previewImage(this, 'preview_background_new')">
-                                <small class="text-muted">Max 2MB. JPG/PNG only.</small>
-                                <img id="preview_background_new" class="mt-2" style="max-height: 60px;" hidden>
-                            </div>
-
-                            {{-- Watermark --}}
-                            <div class="col-md-6">
-                                <label class="form-label">Watermark</label>
-                                @if (!empty($settings['watermark_url']))
-                                    <div class="mb-2 d-flex align-items-center gap-2">
-                                        <img src="{{ asset('storage/' . $settings['watermark_url']) }}" alt="Watermark"
-                                            height="60" id="preview_watermark">
-                                        <div class="form-check">
-                                            <input class="form-check-input" type="checkbox" name="remove_watermark"
-                                                value="1" id="removeWatermark">
-                                            <label class="form-check-label" for="removeWatermark">Remove</label>
-                                        </div>
-                                    </div>
-                                @endif
-                                <input type="file" name="watermark_file" class="form-control"
-                                    onchange="previewImage(this, 'preview_watermark_new')">
-                                <small class="text-muted">Max 1MB. PNG only.</small>
-                                <img id="preview_watermark_new" class="mt-2" style="max-height: 60px;" hidden>
-                            </div>
-
+                {{-- Email --}}
+                <div class="tab-pane fade" id="email">
+                    <div class="row g-4">
+                        <div class="col-md-6">
+                            <label class="form-label">Email From Name</label>
+                            <input type="text" name="email_from_name" class="form-control"
+                                value="{{ $settings['email_from_name'] ?? '' }}">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Email From Address</label>
+                            <input type="email" name="email_from_address" class="form-control"
+                                value="{{ $settings['email_from_address'] ?? '' }}">
                         </div>
                     </div>
                 </div>
 
-
-
-                {{-- EMAIL SETTINGS --}}
-                <div class="accordion-item">
-                    <h2 class="accordion-header" id="emailSettingsHeader">
-                        <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse"
-                            data-bs-target="#emailSettings">
-                            Email Settings
-                        </button>
-                    </h2>
-                    <div id="emailSettings" class="accordion-collapse collapse" data-bs-parent="#settingsAccordion">
-                        <div class="accordion-body row g-3">
-                            <div class="col-md-6">
-                                <label class="form-label">Email From Name</label>
-                                <input type="text" name="email_from_name" class="form-control"
-                                    value="{{ $settings['email_from_name'] ?? '' }}">
-                            </div>
-                            <div class="col-md-6">
-                                <label class="form-label">Email From Address</label>
-                                <input type="email" name="email_from_address" class="form-control"
-                                    value="{{ $settings['email_from_address'] ?? '' }}">
-                            </div>
+                {{-- Invoice --}}
+                <div class="tab-pane fade" id="invoice">
+                    <div class="row g-4">
+                        <div class="col-md-4">
+                            <label class="form-label">Invoice Prefix</label>
+                            <input type="text" name="invoice_prefix" class="form-control"
+                                value="{{ $settings['invoice_prefix'] ?? '' }}">
+                        </div>
+                        <div class="col-md-8">
+                            <label class="form-label">Invoice Terms</label>
+                            <input type="text" name="invoice_terms" class="form-control"
+                                value="{{ $settings['invoice_terms'] ?? '' }}">
                         </div>
                     </div>
                 </div>
 
-                {{-- INVOICE SETTINGS --}}
-                <div class="accordion-item">
-                    <h2 class="accordion-header" id="invoiceSettingsHeader">
-                        <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse"
-                            data-bs-target="#invoiceSettings">
-                            Invoice & Tax Settings
-                        </button>
-                    </h2>
-                    <div id="invoiceSettings" class="accordion-collapse collapse" data-bs-parent="#settingsAccordion">
-                        <div class="accordion-body row g-3">
-                            <div class="col-md-4">
-                                <label class="form-label">Invoice Prefix</label>
-                                <input type="text" name="invoice_prefix" class="form-control"
-                                    value="{{ $settings['invoice_prefix'] ?? 'INV-' }}">
-                            </div>
-                            <div class="col-md-4">
-                                <label class="form-label">Tax Percentage (%)</label>
-                                <input type="number" name="tax_percentage" step="0.01" class="form-control"
-                                    value="{{ $settings['tax_percentage'] ?? '0' }}">
-                            </div>
-                            <div class="col-md-4">
-                                <label class="form-label">Invoice Terms</label>
-                                <input type="text" name="invoice_terms" class="form-control"
-                                    value="{{ $settings['invoice_terms'] ?? '' }}">
-                            </div>
+                {{-- Affiliate (Dynamic Levels) --}}
+                <div class="tab-pane fade" id="affiliate">
+                    <div class="row g-4">
+                        {{-- Default Commission (fallback) --}}
+                        <div class="col-md-4">
+                            <label class="form-label">
+                                Default Commission %
+                                <span class="text-muted" data-bs-toggle="tooltip"
+                                    title="Used only if no level-based rate applies.">ⓘ</span>
+                            </label>
+                            <input type="number" step="0.01" name="affiliate_commission_percentage"
+                                class="form-control" value="{{ $settings['affiliate_commission_percentage'] ?? '30' }}">
+                        </div>
+                    </div>
+
+                    <hr>
+
+                    @php
+                        // Read levels from JSON; default to 1–3 if empty.
+                        $levelsJson = $settings['affiliate_commission_levels'] ?? '{}';
+                        $levelsArr = json_decode($levelsJson, true);
+                        if (!is_array($levelsArr) || empty($levelsArr)) {
+                            $levelsArr = [1 => 0.1, 2 => 0.05, 3 => 0.02];
+                        }
+                        // Convert decimals (0.10) to display percent (10)
+                        $displayLevels = [];
+                        foreach ($levelsArr as $lvl => $dec) {
+                            $displayLevels[(int) $lvl] = is_numeric($dec) ? ($dec > 1 ? $dec : $dec * 100) : 0;
+                        }
+                        ksort($displayLevels);
+                    @endphp
+
+                    <div class="d-flex align-items-center justify-content-between mb-2">
+                        <h6 class="mb-0">Commission Levels</h6>
+                        <button type="button" class="btn btn-sm btn-outline-primary" id="addLevelBtn">Add Level</button>
+                    </div>
+
+                    <div class="table-responsive">
+                        <table class="table table-sm align-middle" id="levelsTable">
+                            <thead class="table-light">
+                                <tr>
+                                    <th style="width: 140px;">Level</th>
+                                    <th>Percentage (%)</th>
+                                    <th style="width: 80px;"></th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach ($displayLevels as $level => $percent)
+                                    <tr>
+                                        <td>
+                                            <input type="number" min="1" step="1"
+                                                class="form-control level-input" name="level_keys[]"
+                                                value="{{ $level }}">
+                                        </td>
+                                        <td>
+                                            <div class="input-group">
+                                                <input type="number" step="0.01" min="0"
+                                                    class="form-control pct-input"
+                                                    name="commission_levels[{{ $level }}]"
+                                                    value="{{ rtrim(rtrim(number_format((float) $percent, 2, '.', ''), '0'), '.') }}">
+                                                <span class="input-group-text">%</span>
+                                            </div>
+                                            <small class="text-muted">This will be saved as a decimal (e.g., 10% →
+                                                0.10).</small>
+                                        </td>
+                                        <td class="text-end">
+                                            <button type="button"
+                                                class="btn btn-sm btn-outline-danger remove-level-btn">Remove</button>
+                                        </td>
+                                    </tr>
+                                @endforeach
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <template id="levelRowTemplate">
+                        <tr>
+                            <td>
+                                <input type="number" min="1" step="1" class="form-control level-input"
+                                    name="level_keys[]" value="">
+                            </td>
+                            <td>
+                                <div class="input-group">
+                                    <input type="number" step="0.01" min="0" class="form-control pct-input"
+                                        name="" value="">
+                                    <span class="input-group-text">%</span>
+                                </div>
+                                <small class="text-muted">This will be saved as a decimal (e.g., 12.5% → 0.125).</small>
+                            </td>
+                            <td class="text-end">
+                                <button type="button"
+                                    class="btn btn-sm btn-outline-danger remove-level-btn">Remove</button>
+                            </td>
+                        </tr>
+                    </template>
+                </div>
+
+                {{-- Other --}}
+                <div class="tab-pane fade" id="other">
+                    <div class="row g-4">
+                        <div class="col-md-4">
+                            <label class="form-label">Tax %</label>
+                            <input type="number" step="0.01" name="tax_percentage" class="form-control"
+                                value="{{ $settings['tax_percentage'] ?? '' }}">
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label">Default Currency</label>
+                            <input type="text" name="default_currency" class="form-control"
+                                value="{{ $settings['default_currency'] ?? 'NGN' }}">
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label">Timezone</label>
+                            <input type="text" name="timezone" class="form-control"
+                                value="{{ $settings['timezone'] ?? 'Africa/Lagos' }}">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Homepage URL</label>
+                            <input type="url" name="homepage_url" class="form-control"
+                                value="{{ $settings['homepage_url'] ?? '' }}">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Terms URL</label>
+                            <input type="url" name="terms_url" class="form-control"
+                                value="{{ $settings['terms_url'] ?? '' }}">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Privacy Policy URL</label>
+                            <input type="url" name="privacy_url" class="form-control"
+                                value="{{ $settings['privacy_url'] ?? '' }}">
                         </div>
                     </div>
                 </div>
-
             </div>
 
-            <div class="text-end mt-4">
+            <div class="mt-4 text-end">
                 <button type="submit" class="btn btn-primary">Save Settings</button>
             </div>
         </form>
@@ -236,17 +247,54 @@
 
 @push('scripts')
     <script>
-        function previewImage(input, previewId) {
-            const file = input.files[0];
-            const reader = new FileReader();
-            reader.onload = function(e) {
-                const img = document.getElementById(previewId);
-                img.src = e.target.result;
-                img.hidden = false;
+        // Enable BS tooltips
+        document.querySelectorAll('[data-bs-toggle="tooltip"]').forEach(function(el) {
+            new bootstrap.Tooltip(el);
+        });
+
+        (function() {
+            const tableBody = document.querySelector('#levelsTable tbody');
+            const addBtn = document.getElementById('addLevelBtn');
+            const tpl = document.getElementById('levelRowTemplate');
+
+            // Helper: recompute input names based on Level column
+            const syncNames = (row) => {
+                const levelInput = row.querySelector('.level-input');
+                const pctInput = row.querySelector('.pct-input');
+                const lvl = (levelInput.value || '').trim();
+
+                // When level number is present, bind name as commission_levels[<level>]
+                if (lvl) {
+                    pctInput.name = `commission_levels[${lvl}]`;
+                } else {
+                    pctInput.name = '';
+                }
             };
-            if (file) {
-                reader.readAsDataURL(file);
-            }
-        }
+
+            // Add new level row
+            addBtn?.addEventListener('click', function() {
+                const clone = tpl.content.cloneNode(true);
+                tableBody.appendChild(clone);
+            });
+
+            // Delegate: handle remove and name sync
+            tableBody?.addEventListener('input', function(e) {
+                if (e.target.classList.contains('level-input')) {
+                    const row = e.target.closest('tr');
+                    syncNames(row);
+                }
+            });
+
+            tableBody?.addEventListener('click', function(e) {
+                if (e.target.classList.contains('remove-level-btn')) {
+                    e.preventDefault();
+                    const row = e.target.closest('tr');
+                    row?.remove();
+                }
+            });
+
+            // Initialize names for existing rows
+            tableBody?.querySelectorAll('tr').forEach(syncNames);
+        })();
     </script>
 @endpush

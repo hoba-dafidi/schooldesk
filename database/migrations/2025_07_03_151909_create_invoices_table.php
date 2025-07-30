@@ -20,7 +20,7 @@ return new class extends Migration
             $table->foreignId('plan_id')->nullable()->constrained()->onDelete('set null');
             $table->decimal('total_amount', 10, 2);
             $table->string('currency', 3)->default('USD');
-            $table->enum('status', ['unpaid', 'paid', 'void', 'refunded'])->default('unpaid');
+            $table->enum('status', ['unpaid', 'paid', 'void', 'refunded', 'pending'])->default('unpaid');
             $table->timestamp('due_date')->nullable();
             $table->timestamp('paid_at')->nullable();
             $table->string('payment_gateway_id')->nullable(); // Transaction ID from payment gateway
@@ -31,6 +31,9 @@ return new class extends Migration
             $table->text('notes')->nullable();
             $table->json('meta')->nullable();
             $table->string('reference')->nullable();
+            $table->string('payment_method')->nullable();         // e.g., 'manual', 'paystack'
+            $table->string('payment_proof_path')->nullable();     // file path
+            $table->text('payment_note')->nullable();             // user-provided note
 
             $table->timestamps();
         });

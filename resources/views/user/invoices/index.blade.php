@@ -4,7 +4,7 @@
 
 @section('content')
     <div class="container-xxl flex-grow-1 container-p-y">
-        <x-flash-messages />
+
 
         <h4 class="fw-bold mb-4">My Invoices</h4>
 

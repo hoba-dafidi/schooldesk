@@ -15,8 +15,13 @@ return new class extends Migration
             // Primary Key
             $table->id();
 
+            // Referral system
+            $table->string('referral_code')->nullable()->unique();
+            $table->unsignedBigInteger('referred_by')->nullable();
+
             // Basic Info
             $table->string('firstname');
+            $table->string('middlename')->nullable();
             $table->string('lastname');
             $table->string('email')->unique();
             $table->string('password');
@@ -41,12 +46,11 @@ return new class extends Migration
             $table->integer('login_attempts')->default(0);
             $table->timestamp('locked_until')->nullable();
 
-            // Multi-Tenancy (Assuming a 'tenants' table exists or will be created)
-            // You'll need to create a `create_tenants_table` migration if you don't have one.
+            // Multi-Tenancy
             $table->foreignId('tenant_id')->nullable()->constrained()->onDelete('cascade');
 
-            // Roles (if not using Spatie package)
-            $table->string('role')->default('user'); // e.g., 'user', 'admin', 'super_admin'
+            // Roles (if not using Spatie roles)
+            $table->string('role')->default('user');
 
             // Billing (Laravel Cashier Stripe)
             $table->string('stripe_id')->nullable();
@@ -54,17 +58,36 @@ return new class extends Migration
             $table->string('pm_last_four')->nullable();
             $table->timestamp('trial_ends_at')->nullable();
 
-            // OAuth (optional)
+            // OAuth
             $table->string('provider')->nullable();
             $table->string('provider_id')->nullable();
+
+            $table->string('bank_name')->nullable();
+            $table->string('bank_code')->nullable();
+            $table->string('account_number')->nullable();
+            $table->string('account_name')->nullable();
 
             // Usage Tracking
             $table->timestamp('last_seen_at')->nullable();
 
             // Timestamps
             $table->timestamps();
-            $table->softDeletes(); // optional, for soft deletes
+            $table->softDeletes(); // Optional
         });
+
+        // Add foreign key for referred_by separately
+        Schema::table('users', function (Blueprint $table) {
+            // Optional: Add foreign key constraint (self-referencing)
+            $table->foreign('referred_by')->references('id')->on('users')->onDelete('set null');
+        });
+
+        // Schema::table('users', function (Blueprint $table) {
+        //     $table->foreignId('attribution_campaign_id')
+        //         ->nullable()
+        //         ->after('referred_by')
+        //         ->constrained('affiliate_campaigns')
+        //         ->nullOnDelete();
+        // });
 
         Schema::create('password_reset_tokens', function (Blueprint $table) {
             $table->string('email')->primary();
@@ -87,8 +110,16 @@ return new class extends Migration
      */
     public function down(): void
     {
+      Schema::table('users', function (Blueprint $table) {
+            $table->dropForeign(['referred_by']);
+            $table->dropColumn(['referral_code', 'referred_by']);
+        });
         Schema::dropIfExists('users');
         Schema::dropIfExists('password_reset_tokens');
         Schema::dropIfExists('sessions');
+
+        Schema::table('users', function (Blueprint $table) {
+            $table->dropConstrainedForeignId('attribution_campaign_id');
+        });
     }
 };

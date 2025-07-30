@@ -111,6 +111,18 @@
       ]
     },
     {
+      "url": "/admin/manual-payments",
+      "name": "Manual Payments",
+      "icon": "menu-icon tf-icons bx bx-receipt",
+      "slug": "admin.manual-payments",
+      "type": [
+        "admin",
+        "support",
+        "sale",
+        "developer"
+      ]
+    },
+    {
       "url": "/user/invoices",
       "name": "Invoices",
       "icon": "menu-icon tf-icons bx bx-receipt",
@@ -134,6 +146,77 @@
       "name": "Coupons",
       "icon": "menu-icon tf-icons bx bx-purchase-tag",
       "slug": "admin.coupons",
+      "type": [
+        "admin",
+        "sale",
+        "developer"
+      ]
+    },
+    {
+      "menuHeader": "My Affiliate Tools"
+    },
+    {
+      "url": "/affiliate",
+      "name": "Affiliate Dashboard",
+      "icon": "menu-icon tf-icons bx bx-bar-chart",
+      "slug": "affiliate",
+      "type": "user"
+    },
+    {
+      "url": "/affiliate/campaigns",
+      "name": "My Campaigns",
+      "icon": "menu-icon tf-icons bx bx-bullseye",
+      "slug": "campaigns",
+      "type": "user"
+    },
+    {
+      "url": "/affiliate/payout-requests",
+      "name": "Payout Requests",
+      "icon": "menu-icon tf-icons bx bx-wallet",
+      "slug": "affiliate.payout-requests",
+      "type": "user"
+    },
+    {
+      "menuHeader": "Affiliate Management"
+    },
+    {
+      "url": "/admin/affiliates",
+      "name": "Affiliates",
+      "icon": "menu-icon tf-icons bx bx-user-check",
+      "slug": "admin.affiliates",
+      "type": [
+        "admin",
+        "sale",
+        "developer"
+      ]
+    },
+    {
+      "url": "/admin/commissions",
+      "name": "Commissions",
+      "icon": "menu-icon tf-icons bx bx-dollar",
+      "slug": "admin.commissions",
+      "type": [
+        "admin",
+        "sale",
+        "developer"
+      ]
+    },
+    {
+      "url": "/admin/campaigns",
+      "name": "All Campaigns",
+      "icon": "menu-icon tf-icons bx bx-bullseye",
+      "slug": "admin.campaigns",
+      "type": [
+        "admin",
+        "sale",
+        "developer"
+      ]
+    },
+    {
+      "url": "/admin/payout-requests",
+      "name": "Payout Requests",
+      "icon": "menu-icon tf-icons bx bx-wallet",
+      "slug": "admin.payout-requests",
       "type": [
         "admin",
         "sale",

@@ -4,6 +4,7 @@
             @csrf
             <input type="hidden" name="school_id" id="subscription_school_id">
             <input type="hidden" name="plan_id" id="subscription_plan_id">
+            <input type="hidden" name="payment_gateway_slug" id="payment_gateway_slug" value="manual">
 
             <div class="modal-content shadow-lg border-0 rounded-3">
                 <div class="modal-header bg-primary text-white align-items-center">
@@ -45,8 +46,6 @@
                                             <span id="currentEndsAt" class="text-muted"></span>
                                         </li>
                                     </ul>
-
-                                    <!-- Centered Cancel Button -->
                                     <div class="d-flex justify-content-center py-3">
                                         <a class="btn btn-xs btn-outline-danger" id="cancelSubscriptionBtn"
                                             style="display: none;">
@@ -54,10 +53,8 @@
                                         </a>
                                     </div>
                                 </div>
-
                             </div>
                         </div>
-
 
                         <!-- Right: Form Fields -->
                         <div class="col-12 col-md-7">
@@ -79,7 +76,8 @@
                                     <label for="gatewaySelect" class="form-label">Select Payment Method</label>
                                     <select name="gateway_id" class="form-select" id="gatewaySelect" required>
                                         @foreach ($gateways as $gateway)
-                                            <option value="{{ $gateway->id }}">{{ $gateway->display_name }}</option>
+                                            <option value="{{ $gateway->id }}" data-slug="{{ $gateway['slug'] }}">
+                                                {{ $gateway->display_name }}</option>
                                         @endforeach
                                     </select>
                                 </div>
@@ -111,8 +109,6 @@
                         </div>
                     </div>
                 </div>
-
-
 
                 <div class="modal-footer bg-light p-3">
                     <button type="button" id="renewBtn" class="btn btn-success me-auto" disabled>Renew</button>

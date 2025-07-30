@@ -60,7 +60,7 @@
             <a class="nav-link dropdown-toggle hide-arrow p-0" href="javascript:void(0);" data-bs-toggle="dropdown">
                 <div class="avatar avatar-online">
                     <img src="{{ Auth::user()->avatar ? asset('storage/' . Auth::user()->avatar) : asset('assets/img/avatars/default.png') }}"
-                        alt class="w-px-40 h-auto rounded-circle">
+                        alt class="w-px-40 h-20 rounded-circle">
                 </div>
             </a>
             <ul class="dropdown-menu dropdown-menu-end">
@@ -71,7 +71,7 @@
                                 <div class="avatar avatar-online">
                                     <img src="{{ Auth::user()->avatar ? asset('storage/' . Auth::user()->avatar) : asset('assets/img/avatars/default.png') }}"
                                         alt="{{ Auth::user()->firstname }} {{ Auth::user()->lastname }}"
-                                        class="w-px-40 h-auto rounded-circle">
+                                        class="w-px-40 h-20 rounded-circle">
                                 </div>
                             </div>
                             <div class="flex-grow-1">

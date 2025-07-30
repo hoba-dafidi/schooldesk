@@ -31,7 +31,9 @@ return [
     ],
   ],
 
-
+'flutterwave' => [
+    'secret_key' => env('FLUTTERWAVE_SECRET_KEY'),
+],
 
 
 ];

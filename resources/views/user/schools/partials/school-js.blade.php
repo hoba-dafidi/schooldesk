@@ -123,6 +123,7 @@
             $('#planSelect').val('');
             $('#renewBtn, #upgradeBtn').prop('disabled', true);
 
+            updateGatewaySlug();
 
 
             // Reset and disable fields
@@ -222,6 +223,10 @@
             }
         });
 
+        $('#gatewaySelect').on('change', function() {
+            updateGatewaySlug();
+        });
+
 
 
         // Bind buttons
@@ -287,6 +292,7 @@
         const $button = $(buttonId);
         const schoolId = $('#subscription_school_id').val();
         const planId = $('#planSelect').val();
+        const payment_gateway_slug = $('#payment_gateway_slug').val();
         const gatewayId = $('#gatewaySelect').val();
         const email = $('input[name="payer_email"]').val();
         const amount = $('input[name="amount"]').val();
@@ -299,7 +305,7 @@
         const plan = plans.find(p => p.id == planId);
         if (!plan) return showToast('error', 'Invalid plan selected.');
 
-        // FREE Plan — no invoice, just call backend directly
+        // Handle Free Plan (No Payment Needed)
         if (plan.slug === 'free') {
             $.post({
                 url,
@@ -332,7 +338,7 @@
             return;
         }
 
-        // Paid Plan — create invoice, redirect from backend
+        // Paid Plan (Invoice Required)
         $.ajax({
             url: url,
             method: 'POST',
@@ -340,7 +346,8 @@
                 _token: $('meta[name="csrf-token"]').attr('content'),
                 plan_id: planId,
                 school_id: schoolId,
-                gateway_id: gatewayId
+                gateway_id: gatewayId,
+                payment_gateway_slug: payment_gateway_slug
             },
             beforeSend: function() {
                 $button.prop('disabled', true).text(`${action}...`);
@@ -349,20 +356,30 @@
             success: function(res) {
                 $button.prop('disabled', false).text(action);
 
-                console.log(res.success + "&&" + res.redirect_url);
                 if (res.success && res.redirect_url) {
-                    window.location.href = res.redirect_url; // Paystack or invoice pay route
+                    window.location.href = res.redirect_url;
                 } else {
                     $('#subscriptionMessages').html(
                         `<div class="alert alert-danger">${res.message || 'Failed to create invoice.'}</div>`
                     );
                 }
             },
-            error: function() {
+            error: function(xhr) {
                 $button.prop('disabled', false).text(action);
+                let message = 'Server error occurred.';
+                if (xhr.responseJSON?.message) {
+                    message = xhr.responseJSON.message;
+                }
                 $('#subscriptionMessages').html(
-                    `<div class="alert alert-danger">Server error occurred.</div>`);
+                    `<div class="alert alert-danger">${message}</div>`
+                );
             }
         });
+    }
+
+    function updateGatewaySlug() {
+        const selected = $('#gatewaySelect').find(':selected');
+        const slug = selected.data('slug') || selected.val();
+        $('#payment_gateway_slug').val(slug);
     }
 </script>

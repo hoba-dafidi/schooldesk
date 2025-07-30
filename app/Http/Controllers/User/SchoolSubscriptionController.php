@@ -4,6 +4,7 @@ namespace App\Http\Controllers\User;
 
 use App\Events\SubscriptionChanged;
 use App\Http\Controllers\Controller;
+use App\Models\AffiliateCommission;
 use App\Models\Coupon;
 use App\Models\Invoice;
 use App\Models\InvoiceItem;
@@ -13,6 +14,7 @@ use App\Models\School;
 use App\Models\Setting;
 use App\Models\Subscription;
 use App\Models\SubscriptionAudit;
+use App\Models\User;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -53,6 +55,7 @@ class SchoolSubscriptionController extends Controller
             'currency'         => 'nullable|string|max:10',
             'discount_amount'  => 'nullable|numeric|min:0',
             'due_date'         => 'nullable|date|after_or_equal:today',
+            'payment_gateway_slug' => 'required|exists:payment_gateways,slug',
         ]);
 
         $plan = Plan::findOrFail($request->plan_id);
@@ -65,8 +68,10 @@ class SchoolSubscriptionController extends Controller
             'status'     => 'pending',
         ]);
 
+        $this->handleReferral(Auth::user(), $subscription);
+
         if ($plan->price > 0) {
-            $gateway = PaymentGateway::where('slug', 'paystack')->first();
+            $gateway = PaymentGateway::where('slug', $request->payment_gateway_slug)->firstOrFail();
             $taxPercentage = Setting::get('tax_percentage', 0);
 
             $discountAmount = $request->discount_amount ?? 0;
@@ -172,6 +177,7 @@ class SchoolSubscriptionController extends Controller
         $request->validate([
             'plan_id' => 'required|exists:plans,id',
             'coupon_code' => 'nullable|string|max:50',
+            'payment_gateway_slug' => 'required|exists:payment_gateways,slug',
         ]);
 
         $subscription = $school->activeSubscription;
@@ -201,7 +207,9 @@ class SchoolSubscriptionController extends Controller
             'status'     => 'pending',
         ]);
 
-        $gateway = PaymentGateway::where('slug', 'paystack')->first();
+        $this->handleReferral(Auth::user(), $subscription);
+
+        $gateway = PaymentGateway::where('slug', $request->payment_gateway_slug)->firstOrFail();
         $currency = $gateway->currency ?? 'NGN';
 
         // Tax calculation
@@ -331,12 +339,13 @@ class SchoolSubscriptionController extends Controller
     {
         $request->validate([
             'plan_id' => 'required|exists:plans,id',
-            'gateway' => 'nullable|string',
+            'payment_gateway_slug' => 'required|exists:payment_gateways,slug',
             'coupon_code' => 'nullable|string',
         ]);
 
         $newPlan = Plan::findOrFail($request->plan_id);
-        $gateway = PaymentGateway::where('slug', $request->gateway)->first();
+        $gateway = PaymentGateway::where('slug', $request->payment_gateway_slug)->firstOrFail();
+
         $subscription = $school->subscription;
 
         if ($school->user_id !== Auth::id()) {
@@ -360,6 +369,8 @@ class SchoolSubscriptionController extends Controller
             'starts_at'           => now(),
             'ends_at'             => now()->addDays($newPlan->duration_days),
         ]);
+
+        // $this->handleReferral(Auth::user(), $subscription);
 
         // Coupon logic
         $coupon = null;
@@ -555,162 +566,6 @@ class SchoolSubscriptionController extends Controller
         return view('user.schools.subscriptions.history', compact('school', 'subscriptions'));
     }
 
-    // public function renew(Request $request, $schoolId)
-    // {
-    //     $request->validate([
-    //         'plan_id' => 'required|exists:plans,id',
-    //         'reference' => 'nullable|string',
-    //         'gateway_id' => 'nullable|exists:payment_gateways,id',
-    //     ]);
-
-    //     $school = School::findOrFail($schoolId);
-    //     $plan = Plan::findOrFail($request->plan_id);
-
-    //     if ($school->user_id !== Auth::id()) {
-    //         return response()->json(['success' => false, 'message' => 'Unauthorized'], 403);
-    //     }
-
-    //     $isFree = $plan->slug === 'free';
-
-    //     if (!$isFree) {
-    //         if (!$request->reference || !$request->gateway_id) {
-    //             return response()->json(['success' => false, 'message' => 'Payment information required.'], 422);
-    //         }
-
-    //         $gateway = PaymentGateway::findOrFail($request->gateway_id);
-    //         $isValid = $this->verifyPayment($request->reference, $gateway);
-
-    //         if (!$isValid) {
-    //             return response()->json(['success' => false, 'message' => 'Payment verification failed.'], 422);
-    //         }
-    //     }
-
-    //     // Expire current subscription if same plan
-    //     $current = $school->currentSubscription()->first();
-    //     $startsAt = now();
-
-    //     if ($current && $current->status === 'active' && $current->plan_id === $plan->id) {
-    //         $startsAt = $current->ends_at->greaterThan(now()) ? $current->ends_at : now();
-    //         $current->update(['status' => 'expired']);
-    //     }
-
-    //     $subscription = Subscription::create([
-    //         'school_id'           => $school->id,
-    //         'plan_id'             => $plan->id,
-    //         'user_id'             => Auth::id(),
-    //         'payment_gateway_id'  => $isFree ? null : $request->gateway_id,
-    //         'external_reference'  => $isFree ? null : $request->reference,
-    //         'status'              => 'active',
-    //         'starts_at'           => $startsAt,
-    //         'ends_at'             => $startsAt->copy()->addDays($plan->duration_days),
-    //     ]);
-
-    //     $school->is_paid_plan = !$isFree;
-    //     $school->save();
-
-    //     // ✅ Add audit log
-    //     SubscriptionAudit::create([
-    //         'school_id'   => $school->id,
-    //         'user_id'     => Auth::id(),
-    //         'old_plan_id' => $current?->plan_id,
-    //         'new_plan_id' => $plan->id,
-    //         'action'      => 'renew',
-    //         'notes'       => $current
-    //             ? "Renewed plan: {$plan->name} (previous: {$current->plan->name})"
-    //             : "New subscription started with plan: {$plan->name}",
-    //     ]);
-
-    //     return response()->json([
-    //         'success' => true,
-    //         'message' => 'Subscription renewed successfully.',
-    //         'subscription' => $subscription,
-    //     ]);
-    // }
-
-
-
-    // public function upgrade(Request $request, $schoolId)
-    // {
-    //     $request->validate([
-    //         'plan_id' => 'required|exists:plans,id',
-    //         'reference' => 'nullable|string',
-    //         'gateway_id' => 'nullable|exists:payment_gateways,id',
-    //     ]);
-
-    //     $school = School::findOrFail($schoolId);
-    //     $plan = Plan::findOrFail($request->plan_id);
-
-    //     if ($school->user_id !== Auth::id()) {
-    //         return response()->json(['success' => false, 'message' => 'Unauthorized'], 403);
-    //     }
-
-    //     $isFree = $plan->slug === 'free';
-
-    //     if (!$isFree) {
-    //         if (!$request->reference || !$request->gateway_id) {
-    //             return response()->json(['success' => false, 'message' => 'Payment information required.'], 422);
-    //         }
-
-    //         $gateway = PaymentGateway::findOrFail($request->gateway_id);
-    //         $isValid = $this->verifyPayment($request->reference, $gateway);
-
-    //         if (!$isValid) {
-    //             return response()->json(['success' => false, 'message' => 'Payment verification failed.'], 422);
-    //         }
-    //     }
-
-    //     // Cancel old subscription if active
-    //     $existing = $school->currentSubscription()->first();
-    //     if ($existing && $existing->status === 'active') {
-    //         $existing->update(['status' => 'cancelled']);
-    //     }
-
-    //     // Create new subscription
-    //     $subscription = Subscription::create([
-    //         'school_id'           => $school->id,
-    //         'plan_id'             => $plan->id,
-    //         'user_id'             => Auth::id(),
-    //         'payment_gateway_id'  => $isFree ? null : $request->gateway_id,
-    //         'external_reference'  => $isFree ? null : $request->reference,
-    //         'status'              => 'active',
-    //         'starts_at'           => now(),
-    //         'ends_at'             => now()->addDays($plan->duration_days),
-    //     ]);
-
-    //     $school->is_paid_plan = !$isFree;
-    //     $school->save();
-
-    //     // ✅ Add audit log
-    //     if ($existing) {
-    //         $action = $plan->price > $existing->plan->price ? 'upgrade' : 'downgrade';
-
-    //         SubscriptionAudit::create([
-    //             'school_id'   => $school->id,
-    //             'user_id'     => Auth::id(),
-    //             'old_plan_id' => $existing->plan_id,
-    //             'new_plan_id' => $plan->id,
-    //             'action'      => $action,
-    //             'notes'       => "Switched from {$existing->plan->name} to {$plan->name}",
-    //         ]);
-    //     } else {
-    //         SubscriptionAudit::create([
-    //             'school_id'   => $school->id,
-    //             'user_id'     => Auth::id(),
-    //             'old_plan_id' => null,
-    //             'new_plan_id' => $plan->id,
-    //             'action'      => 'upgrade',
-    //             'notes'       => "Initial upgrade to {$plan->name}",
-    //         ]);
-    //     }
-
-    //     return response()->json([
-    //         'success' => true,
-    //         'message' => 'Subscription upgraded successfully.',
-    //         'subscription' => $subscription,
-    //     ]);
-    // }
-
-
     public function cancel(Request $request, $schoolId)
     {
         $school = School::findOrFail($schoolId);
@@ -762,8 +617,6 @@ class SchoolSubscriptionController extends Controller
     }
 
 
-
-
     // Get current active subscription info (AJAX GET)
     public function currentSubscription(School $school)
     {
@@ -800,34 +653,35 @@ class SchoolSubscriptionController extends Controller
         ]);
     }
 
-    private function verifyPayment(string $reference, PaymentGateway $gateway): bool
+    public function handleReferral(User $user, Subscription $subscription)
     {
-        try {
-            if ($gateway->slug === 'paystack') {
-                $response = Http::withToken($gateway->api_secret)
-                    ->get("https://api.paystack.co/transaction/verify/{$reference}");
+        // Example: check if referral code was stored during registration
+        $referrer = User::where('referral_code', $user->referred_by_code)->first();
 
-                return $response->ok() &&
-                    $response->json('data.status') === 'success' &&
-                    $response->json('data.reference') === $reference;
-            }
-
-            if ($gateway->slug === 'flutterwave') {
-                $response = Http::withToken($gateway->api_key)
-                    ->get("https://api.flutterwave.com/v3/transactions/verify_by_reference?tx_ref={$reference}");
-
-                return $response->ok() &&
-                    $response->json('data.status') === 'successful' &&
-                    $response->json('data.tx_ref') === $reference;
-            }
-
-            return false;
-        } catch (\Exception $e) {
-            Log::error('Payment verification failed: ' . $e->getMessage());
-            return false;
+        // 1. Prevent self-referrals
+        if (!$referrer || $referrer->id === $user->id) {
+            return; // invalid or self-referral, ignore
         }
-    }
 
+        // 2. Avoid duplicate commissions (one referral per referred user)
+        $existing = AffiliateCommission::where('referred_user_id', $user->id)->first();
+        if ($existing) {
+            return; // already rewarded, no duplicate
+        }
+
+        // Get system-wide affiliate commission percentage from settings
+            $commissionRate = (float) \App\Models\Setting::get('affiliate_commission_percentage', 10); // default to 10%
+            $commissionRateDecimal = $commissionRate / 100;
+            $amount = $subscription->plan->price * $commissionRateDecimal;
+
+        // 3. Reward the referrer (one-time commission)
+        AffiliateCommission::create([
+            'user_id' => $referrer->id, // referrer
+            'referred_user_id' => $user->id,
+            'amount' => $amount, // or based on your logic
+            'status' => 'pending',
+        ]);
+    }
 
 
 }
